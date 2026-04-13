@@ -1,6 +1,7 @@
 const orderModel = require("../model/order.model");
 const shopModel = require("../model/shop.model");
 const { validationResult } = require("express-validator");
+const socketService = require("../services/socket.service");
 
 /**
  * Get Seller Orders Handler
@@ -122,6 +123,7 @@ async function getSellerOrders(req, res) {
 async function acceptOrder(req, res) {
   const userId = req.user.id;
   const { orderId } = req.params;
+  const io = req.app.get("io");
 
   try {
     // Get seller's shop
@@ -170,6 +172,11 @@ async function acceptOrder(req, res) {
     order.status = "accepted";
     await order.save();
 
+    // Emit socket notification about order acceptance
+    if (io) {
+      socketService.notifySellerOrderUpdate(io, shop._id, order, "accepted");
+    }
+
     res.status(200).json({
       success: true,
       data: {
@@ -205,6 +212,7 @@ async function acceptOrder(req, res) {
 async function rejectOrder(req, res) {
   const userId = req.user.id;
   const { orderId } = req.params;
+  const io = req.app.get("io");
 
   try {
     // Get seller's shop
@@ -254,6 +262,11 @@ async function rejectOrder(req, res) {
     // TODO: Reverse reserved stock
     await order.save();
 
+    // Emit socket notification about order rejection
+    if (io) {
+      socketService.notifySellerOrderUpdate(io, shop._id, order, "rejected");
+    }
+
     res.status(200).json({
       success: true,
       data: {
@@ -287,6 +300,7 @@ async function rejectOrder(req, res) {
 async function completeOrder(req, res) {
   const userId = req.user.id;
   const { orderId } = req.params;
+  const io = req.app.get("io");
 
   try {
     // Get seller's shop
@@ -335,6 +349,11 @@ async function completeOrder(req, res) {
     order.status = "delivered";
     // TODO: Process payment to seller
     await order.save();
+
+    // Emit socket notification about order completion
+    if (io) {
+      socketService.notifySellerOrderUpdate(io, shop._id, order, "completed");
+    }
 
     res.status(200).json({
       success: true,

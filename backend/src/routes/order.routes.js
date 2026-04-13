@@ -5,6 +5,7 @@ const Payment = require("../model/payment.model");
 const paymentService = require("../services/payment.service");
 const tcsService = require("../services/tcs.service");
 const invoiceService = require("../services/invoice.service");
+const socketService = require("../services/socket.service");
 
 const routes = express.Router();
 
@@ -21,6 +22,7 @@ routes.post("/", async (req, res) => {
   try {
     const userId = req.user.id;
     const { items, shippingAddress } = req.body;
+    const io = req.app.get("io");
 
     if (!items || items.length === 0) {
       return res.status(400).json({
@@ -38,6 +40,8 @@ routes.post("/", async (req, res) => {
 
     // Calculate total price
     let totalPrice = 0;
+    let sellerId = null;
+
     for (const item of items) {
       const Product = require("../model/product.model");
       const product = await Product.findById(item.product);
@@ -48,13 +52,18 @@ routes.post("/", async (req, res) => {
         });
       }
       totalPrice += product.price * item.quantity;
+
+      // Get seller from first product
+      if (!sellerId) {
+        sellerId = product.seller;
+      }
     }
 
     // Create order
     const order = new Order({
       user: userId,
       buyer: userId,
-      seller: items[0].seller || null, // Will be populated from product
+      seller: sellerId,
       items,
       shippingAddress,
       totalPrice,
@@ -64,6 +73,11 @@ routes.post("/", async (req, res) => {
     });
 
     await order.save();
+
+    // Emit socket notification to seller if connected
+    if (io && sellerId) {
+      socketService.notifySellerNewOrder(io, sellerId, order);
+    }
 
     res.status(201).json({
       success: true,
