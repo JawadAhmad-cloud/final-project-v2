@@ -8,11 +8,12 @@ const userRoute = require("./routes/user.routes");
 const sellerRoute = require("./routes/seller.routes");
 const adminRoute = require("./routes/admin.routes");
 const adminManagementRoute = require("./routes/adminmanagement.routes");
-const cartRoute = require("./routes/cart.routes");
 const favouriteRoute = require("./routes/favourite.routes");
 const productRoute = require("./routes/product.routes");
+const publicProductRoute = require("./routes/public-product.routes");
 const inventoryRoute = require("./routes/inventory.routes");
 const sellerOrderRoute = require("./routes/sellerorder.routes");
+const orderRoute = require("./routes/order.routes");
 const analyticsRoute = require("./routes/analytics.routes");
 const reviewRoute = require("./routes/review.routes");
 
@@ -35,6 +36,9 @@ app.use(
   }),
 );
 app.use(cookieParser());
+
+// Public routes (no authentication required)
+app.use("/api/product", publicProductRoute);
 
 // Auth routes (no authentication required)
 app.use("/api/auth", authRoute);
@@ -80,9 +84,6 @@ app.use(
 // Review routes (mixed auth - POST requires user, GET is public)
 app.use("/api/reviews", reviewRoute);
 
-// Cart routes
-app.use("/api/cart", authMiddleware, cartRoute);
-
 // Favourite routes
 app.use("/api/favourite", authMiddleware, favouriteRoute);
 
@@ -96,5 +97,8 @@ app.use(
   roleMiddleware("admin"),
   adminManagementRoute,
 );
+
+// Order routes (checkout, payment, shipping, invoicing)
+app.use("/api/order", authMiddleware, orderRoute);
 
 module.exports = app;

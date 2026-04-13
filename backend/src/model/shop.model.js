@@ -102,6 +102,39 @@ const shopSchema = new mongoose.Schema(
       // TODO: Add method to calculate from reviews
     },
 
+    // Revenue tracking
+    totalRevenue: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    earnings: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // Transaction history for seller
+    transactions: [
+      {
+        type: {
+          type: String,
+          enum: ["payment", "refund", "fee"],
+        },
+        amount: Number,
+        date: {
+          type: Date,
+          default: Date.now,
+        },
+        paymentId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Payment",
+        },
+        description: String,
+      },
+    ],
+
     // TODO: Add total reviews count
     // TODO: Add follower count
     // TODO: Add shop policies (refund, return, etc.)

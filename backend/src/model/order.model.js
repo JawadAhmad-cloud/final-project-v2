@@ -98,9 +98,46 @@ const orderSchema = new mongoose.Schema(
       // TODO: Add automatic calculation from items
     },
 
-    // TODO: Add tax calculation
-    // TODO: Add shipping cost
-    // TODO: Add discount/coupon applied
+    // Store actual price at time of purchase
+    totalPrice: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+
+    // Shipping tracking information
+    shipping: {
+      trackingNumber: String,
+      status: {
+        type: String,
+        enum: ["pending", "in_transit", "delivered"],
+        default: "pending",
+      },
+      createdAt: Date,
+      estimatedDelivery: Date,
+      deliveredAt: Date,
+    },
+
+    // Payment tracking
+    payment: {
+      checkoutSessionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Payment",
+      },
+      status: {
+        type: String,
+        enum: ["pending", "paid", "failed", "refunded"],
+        default: "pending",
+      },
+      transactionId: String,
+      paidAt: Date,
+    },
+
+    // Buyer information
+    buyer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
 
     // Payment information
     paymentStatus: {
