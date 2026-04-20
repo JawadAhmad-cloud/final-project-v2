@@ -74,8 +74,14 @@ routes.get("/:productId", async (req, res) => {
     const { productId } = req.params;
 
     const product = await Product.findById(productId)
-      .populate("shop", "shopname shopaddress contact rating")
-      .populate("reviews");
+      .populate("seller", "shopname shopaddress contact rating")
+      .populate({
+        path: "reviews",
+        populate: {
+          path: "user",
+          select: "firstname lastname",
+        },
+      });
 
     if (!product) {
       return res.status(404).json({

@@ -74,7 +74,7 @@ async function addReview(req, res) {
 
     await newReview.save();
 
-    // Update product rating
+    // Update product rating and reviews array
     const allReviews = await reviewModel.find({ product: productId });
     const avgRating =
       allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
@@ -82,6 +82,7 @@ async function addReview(req, res) {
     await productModel.findByIdAndUpdate(productId, {
       rating: avgRating,
       reviewCount: allReviews.length,
+      $push: { reviews: newReview._id },
     });
 
     res.status(201).json({

@@ -103,8 +103,16 @@ const productSchema = new mongoose.Schema(
     reviewCount: {
       type: Number,
       default: 0,
-      // TODO: Auto increment when review is added
+      // Auto incremented when review is added via review controller
     },
+
+    // Reviews array
+    reviews: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Review",
+      },
+    ],
 
     // Product status
     status: {
