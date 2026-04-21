@@ -117,9 +117,19 @@ async function processPayment(checkoutId, verificationData) {
       "payment.transactionId": payment.transactionId,
     });
 
-    // Add revenue to seller
-    // TODO: Process payment to seller
-    await addSellerRevenue(order.seller, payment.sellerAmount, payment._id);
+    // Process payment to seller - Add revenue to seller account
+    const revenueResult = await addSellerRevenue(
+      order.seller,
+      payment.sellerAmount,
+      payment._id,
+    );
+
+    if (!revenueResult.success) {
+      console.warn(
+        `Warning: Failed to add revenue to seller ${order.seller} for payment ${payment._id}`,
+      );
+      // Continue processing despite revenue tracking failure
+    }
 
     return {
       success: true,
