@@ -29,7 +29,7 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "*", // Allow all origins for testing
+    origin: true, // Allow all origins for testing
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

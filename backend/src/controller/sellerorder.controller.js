@@ -350,6 +350,24 @@ async function completeOrder(req, res) {
     // TODO: Process payment to seller
     await order.save();
 
+    // Generate TCS tracking number when order is completed
+    const tcsResult = await tcsService.createShipment(orderId, {
+      origin: shop.shopaddress?.city || "Warehouse",
+      destination: order.shippingAddress?.city || "Destination",
+      weight: 1,
+    });
+
+    if (tcsResult.success) {
+      // Update order with TCS tracking info
+      order.shipping = {
+        trackingNumber: tcsResult.data?.trackingNumber || tcsResult.data?.tcsId,
+        status: "pending",
+        createdAt: new Date(),
+        estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days estimate
+      };
+      await order.save();
+    }
+
     // Emit socket notification about order completion
     if (io) {
       socketService.notifySellerOrderUpdate(io, shop._id, order, "completed");
@@ -361,8 +379,9 @@ async function completeOrder(req, res) {
         orderId: order._id,
         sellerStatus: order.sellerStatus,
         status: order.status,
+        trackingNumber: order.shipping?.trackingNumber,
       },
-      message: "Order completed successfully. Payment will be processed.",
+      message: "Order completed successfully. TCS tracking ID generated.",
     });
   } catch (error) {
     console.error("Complete order error:", error);

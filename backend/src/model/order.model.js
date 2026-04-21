@@ -134,10 +134,7 @@ const orderSchema = new mongoose.Schema(
     },
 
     // Buyer information
-    buyer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
+    // NOTE: Use 'user' field instead - buyer is the same as user (removed duplicate)
 
     // Payment information
     paymentStatus: {

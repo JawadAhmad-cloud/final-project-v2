@@ -62,7 +62,6 @@ routes.post("/", async (req, res) => {
     // Create order
     const order = new Order({
       user: userId,
-      buyer: userId,
       seller: sellerId,
       items,
       shippingAddress,

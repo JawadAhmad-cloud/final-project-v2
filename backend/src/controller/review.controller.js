@@ -34,6 +34,27 @@ async function addReview(req, res) {
   const { productId, orderId, rating, title, comment } = req.body;
 
   try {
+    // Get product to check if user is the seller
+    const product = await productModel.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: "Product not found",
+      });
+    }
+
+    // Check if user is the seller (get shop and verify)
+    const shopModel = require("../model/shop.model");
+    const shop = await shopModel.findById(product.seller);
+    if (shop && shop.seller.toString() === userId) {
+      return res.status(403).json({
+        success: false,
+        data: null,
+        message: "You cannot review your own product",
+      });
+    }
+
     // Verify order exists and user purchased the product
     let isVerifiedPurchase = false;
 

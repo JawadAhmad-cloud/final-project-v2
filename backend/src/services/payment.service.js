@@ -33,9 +33,9 @@ async function createCheckout(orderId, paymentData) {
       paymentMethod: paymentData.paymentMethod || "card",
       checkoutData: {
         cardName: paymentData.cardName,
-        cardNumber: maskCardNumber(paymentData.cardNumber),
+        // NOTE: Card number is NOT stored for security purposes
         expiryDate: paymentData.expiryDate,
-        // Don't store CVV in real scenario
+        // NOTE: CVV is never stored in real scenarios
       },
     });
 
@@ -89,8 +89,28 @@ async function processPayment(checkoutId, verificationData) {
     payment.transactionId = generateTransactionId();
     await payment.save();
 
+    // Get order with items
+    const order = await Order.findById(payment.orderId).populate(
+      "items.product",
+    );
+    if (!order) {
+      return { success: false, message: "Order not found" };
+    }
+
+    // Update inventory for each ordered item
+    const Product = require("../model/product.model");
+    for (const item of order.items) {
+      const product = await Product.findById(item.product._id);
+      if (product) {
+        // Update reserved and available stock
+        product.reservedStock = (product.reservedStock || 0) + item.quantity;
+        product.availableStock = product.totalStock - product.reservedStock;
+        await product.save();
+      }
+    }
+
     // Update order status
-    const order = await Order.findByIdAndUpdate(payment.orderId, {
+    await Order.findByIdAndUpdate(payment.orderId, {
       status: "paid",
       paymentStatus: "paid",
       "payment.status": "paid",
@@ -98,6 +118,7 @@ async function processPayment(checkoutId, verificationData) {
     });
 
     // Add revenue to seller
+    // TODO: Process payment to seller
     await addSellerRevenue(order.seller, payment.sellerAmount, payment._id);
 
     return {
