@@ -534,15 +534,6 @@ Auth Routes
 
 /\*\*
 
-- POST /api/seller/orders/:orderId/complete
-- @description Mark order as completed by seller
-- @param {String} req.params.orderId - Order ID
-- @returns {Object} {success: Boolean, data: Object, message: String}
-- @middleware Authentication required, Role: seller
-  \*/
-
-/\*\*
-
 - DELETE /api/seller/orders/:orderId
 - @description Delete a completed order
 - @param {String} req.params.orderId - Order ID

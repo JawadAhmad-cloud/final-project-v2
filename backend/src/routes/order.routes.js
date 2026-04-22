@@ -116,6 +116,13 @@ routes.post("/:orderId/checkout", async (req, res) => {
       });
     }
 
+    if (order.sellerStatus == "pending" && order.status == "pending") {
+      return res.status(404).json({
+        success: false,
+        message: "Order not accepted",
+      });
+    }
+
     // Create checkout session
     const result = await paymentService.createCheckout(orderId, {
       ...req.body,
@@ -162,6 +169,8 @@ routes.post("/payment/process", async (req, res) => {
       expiryDate,
       cvv,
     });
+
+    console.log(result);
 
     if (!result.success) {
       return res.status(400).json(result);
