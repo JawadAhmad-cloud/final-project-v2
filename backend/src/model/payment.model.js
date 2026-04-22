@@ -71,6 +71,16 @@ const paymentSchema = new mongoose.Schema(
       type: Date,
     },
 
+    // When payment was distributed to seller
+    distributedToSeller: {
+      type: Boolean,
+      default: false,
+    },
+
+    distributedAt: {
+      type: Date,
+    },
+
     // Refund info if applicable
     refundInfo: {
       amount: Number,
