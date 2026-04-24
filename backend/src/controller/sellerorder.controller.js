@@ -1,7 +1,6 @@
 const orderModel = require("../model/order.model");
 const shopModel = require("../model/shop.model");
 const { validationResult } = require("express-validator");
-const tcsService = require("../services/tcs.service");
 const socketService = require("../services/socket.service");
 
 /**
@@ -347,27 +346,9 @@ async function completeOrder(req, res) {
     }
 
     order.sellerStatus = "completed";
-    order.status = "delivered";
+    order.status = "accepted";
     // TODO: Process payment to seller
     await order.save();
-
-    // Generate TCS tracking number when order is completed
-    const tcsResult = await tcsService.createShipment(orderId, {
-      origin: shop.shopaddress?.city || "Warehouse",
-      destination: order.shippingAddress?.city || "Destination",
-      weight: 1,
-    });
-
-    if (tcsResult.success) {
-      // Update order with TCS tracking info
-      order.shipping = {
-        trackingNumber: tcsResult.data?.trackingNumber || tcsResult.data?.tcsId,
-        status: "pending",
-        createdAt: new Date(),
-        estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days estimate
-      };
-      await order.save();
-    }
 
     // Emit socket notification about order completion
     if (io) {
@@ -398,9 +379,8 @@ async function completeOrder(req, res) {
 /**
  * Delete Order Handler
  * @async
- * @param {Object} req - Express request object
- * @param {String} req.user.id - User ID from token (middleware - seller only)
- * @param {String} req.params.orderId - Order ID to delete
+ * @pa},
+      message: "Order marked as completed. Ready for shipping
  * @param {Object} res - Express response object
  * @returns {Object} {success: Boolean, data: null, message: String}
  * @description Deletes a completed order

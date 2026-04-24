@@ -6,6 +6,7 @@ const paymentService = require("../services/payment.service");
 const tcsService = require("../services/tcs.service");
 const invoiceService = require("../services/invoice.service");
 const socketService = require("../services/socket.service");
+const agendaScheduler = require("../services/agenda.scheduler");
 
 const routes = express.Router();
 
@@ -223,6 +224,18 @@ routes.post("/ship/:orderId", async (req, res) => {
 
     if (!result.success) {
       return res.status(400).json(result);
+    }
+
+    // Schedule automatic delivery update based on estimated delivery time
+    if (result.data?.estimatedDelivery) {
+      const scheduleResult = await agendaScheduler.scheduleOrderDelivery(
+        orderId,
+        new Date(result.data.estimatedDelivery)
+      );
+
+      if (!scheduleResult.success) {
+        console.error("Failed to schedule delivery update:", scheduleResult.message);
+      }
     }
 
     res.status(200).json(result);
