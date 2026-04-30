@@ -14,17 +14,17 @@ function Login() {
     try {
       const user =await login(form)
       if(user.role==="seller"){
-        navigate("/seller-dashboard")
+        navigate("/seller/dashboard")
       }
       if(user.role==="user"){
-        navigate("/user-dashboard")
+        navigate("/user/dashboard")
       }
     } catch (error) {
   console.error("Error:", error);
   if(error.errors){
 seterrors(error.errors.map((e)=>e.msg ||e))
   } else if(error?.message){
-    seterrors(error.message)
+    seterrors([error.message])
   } else{
     seterrors("[Request failed]")
   }
@@ -37,7 +37,6 @@ seterrors(error.errors.map((e)=>e.msg ||e))
 }
   }
   const handleChange=(e)=>{
-    e.preventDefault()
     setform({
       ...form,
       [e.target.name]:e.target.value

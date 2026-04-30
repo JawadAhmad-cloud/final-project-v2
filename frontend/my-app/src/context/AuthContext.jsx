@@ -36,15 +36,32 @@ const login = async (formData) => {
 
   const data = await res.json();
 
-  if (!res.ok) {
+  if (!data.success) {
     throw data;
   }
-setUser(data)
-  return setUser(data);
+const user=data.data
+setUser(user)
+return user
 };
-
+const setRoleApi= async(role)=>{
+  const res = await fetch("http://localhost:5000/api/auth/set-role",{
+    method:"POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include", 
+    body:JSON.stringify({role})
+  })
+ const data =await res.json()
+ if(!data.success){
+  throw data
+ }
+ const user=data.data
+setUser(user)
+return user
+}
 return (
-<AuthContext.Provider value={{user, register, login,setUser}}>
+<AuthContext.Provider value={{user, register, login, setRoleApi, setUser}}>
     {children}
 </AuthContext.Provider>
 )
