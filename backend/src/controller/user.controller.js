@@ -23,7 +23,7 @@ async function completeProfile(req, res) {
       success: false,
       data: null,
       message: "Validation failed",
-      errors: errors.array(),
+      errors: errors.array().map((err)=>err.msg ||err),
     });
   }
 

@@ -11,6 +11,7 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register"
 import ProtectedRoute from "../components/ProtectedRoute";
 import AuthPage from "../pages/auth/AuthPage";
+import UserRoutes from "./UserRoutes";
 const AppRoutes = () => {
     const {user}=useContext(AuthContext)
   return (
@@ -37,15 +38,7 @@ const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
     <Route path="/role" element={<ChooseRole />} />
 
-      {/* User dashboard */}
-      <Route
-        path="/user/dashboard"
-        element={
-          <ProtectedRoute role="user">
-            <UserDashboard/>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/user/*" element={<UserRoutes/>}/>
 
       {/* Seller dashboard */}
       <Route
