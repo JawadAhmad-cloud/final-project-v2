@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 import UserLayout from "../layouts/UserLayout";
-import UserDashboard from "../pages/user/UserDashboard";
 import Cart from "../pages/user/Cart";
 import Favorites from "../pages/user/Favorites";
 import UserProfile from "../pages/user/UserProfile";
@@ -16,7 +15,6 @@ const UserRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="dashboard" element={<UserDashboard />} />
         <Route path="cart" element={<Cart />} />
         <Route path="favorites" element={<Favorites />} />
 

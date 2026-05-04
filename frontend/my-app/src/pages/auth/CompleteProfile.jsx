@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const CompleteProfile = () => {
   const { user } = useContext(AuthContext);
-        const navigate=useNavigate()
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -36,23 +36,22 @@ const CompleteProfile = () => {
           body: JSON.stringify(formData),
         },
       );
-        
+
       const data = await res.json();
-       if (data.success) {
-  const updatedUser = user.data; // IMPORTANT
-      console.log(updatedUser)
-  if (updatedUser.role === "user") {
-    navigate("/user/dashboard", { replace: true });
-  } else {
-    navigate("/seller/dashboard", { replace: true });
-  }
-}
+      if (data.success) {
+        const updatedUser = user; // IMPORTANT
+        console.log(updatedUser);
+        if (updatedUser.role === "user") {
+          navigate("/", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
+      }
       if (!data.success) {
         throw data;
       }
 
       alert("Profile completed successfully");
-
     } catch (error) {
       if (error?.errors) {
         setErrors(error.errors);
@@ -61,15 +60,12 @@ const CompleteProfile = () => {
       } else {
         setErrors(["Something went wrong"]);
       }
-
     }
-    
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-lg">
-
         <h2 className="text-2xl font-bold mb-6 text-center">
           Complete Your Profile
         </h2>
@@ -83,13 +79,12 @@ const CompleteProfile = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
           {/* Email (Read Only) */}
           <div>
             <label className="block mb-1 font-medium">Email</label>
             <input
               type="email"
-              value={user?.data.email || ""}
+              value={user?.email || ""}
               disabled
               className="w-full border rounded px-3 py-2 bg-gray-100"
             />
@@ -100,7 +95,7 @@ const CompleteProfile = () => {
             <label className="block mb-1 font-medium">Role</label>
             <input
               type="text"
-              value={user?.data.role || ""}
+              value={user?.role || ""}
               disabled
               className="w-full border rounded px-3 py-2 bg-gray-100"
             />
@@ -165,7 +160,6 @@ const CompleteProfile = () => {
           >
             Complete Profile
           </button>
-
         </form>
       </div>
     </div>

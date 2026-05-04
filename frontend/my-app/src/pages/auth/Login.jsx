@@ -1,109 +1,91 @@
-import React, { useContext, useState } from 'react'
-import { AuthContext } from '../../context/AuthContext'
-import {useNavigate} from 'react-router-dom'
+import React, { useContext, useState } from "react";
+import { AuthContext } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 function Login() {
   const [form, setform] = useState({
-    email:"",
-    password:""
-  })
-  const [errors, seterrors] = useState([])
-  const navigate = useNavigate()
-  const {login}=useContext(AuthContext)
-  const handleSubmit=async(e)=>{
-    e.preventDefault()
+    email: "",
+    password: "",
+  });
+  const [errors, seterrors] = useState([]);
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const user =await login(form)
-      if(user.role==="seller"){
-        navigate("/seller/dashboard")
-      }
-      if(user.role==="user"){
-        navigate("/user/dashboard")
-      }
+      const user = await login(form);
+      navigate("/");
     } catch (error) {
-  console.error("Error:", error);
-  if(error.errors){
-seterrors(error.errors.map((e)=>e.msg ||e))
-  } else if(error?.message){
-    seterrors([error.message])
-  } else{
-    seterrors("[Request failed]")
-  }
+      console.error("Error:", error);
+      if (error.errors) {
+        seterrors(error.errors.map((e) => e.msg || e));
+      } else if (error?.message) {
+        seterrors([error.message]);
+      } else {
+        seterrors("[Request failed]");
+      }
 
-  alert(
-    error.errors?.[0]?.msg ||
-    error.message ||
-    "Request failed"
-  );
-}
-  }
-  const handleChange=(e)=>{
+      alert(error.errors?.[0]?.msg || error.message || "Request failed");
+    }
+  };
+  const handleChange = (e) => {
     setform({
       ...form,
-      [e.target.name]:e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
 
- return (
-    <div className="flex items-center justify-center  bg-[#07080F] text-[#F0F1FF]">
+  return (
+    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+      <p className="text-sm text-gray-600 text-center uppercase mb-2 tracking-wide">
+        Login to your account
+      </p>
+      {errors.length > 0 && (
+        <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded text-sm">
+          {errors.map((err, index) => (
+            <p key={index}>{err}</p>
+          ))}
+        </div>
+      )}
+      {/* Email */}
+      <div className="flex flex-col gap-2">
+        <label className="text-xs uppercase tracking-wide text-gray-700 font-semibold">
+          Email Address
+        </label>
+        <input
+          type="email"
+          name="email"
+          placeholder="you@example.com"
+          onChange={handleChange}
+          className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200"
+        />
+      </div>
 
-  <form
-    onSubmit={handleSubmit}
-    className="w-[420px] bg-[#0F1018] border border-[#2C2D42] rounded-[18px] px-9 py-9 flex flex-col gap-[14px]"
-  >
-    <p className="text-[10px] tracking-[2px] text-[#454666] text-center uppercase mb-4">
-      Login to your account
-    </p>
-{errors.length>0 &&(
-  <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded text-sm">
-            {errors.map((err, index) => (
-              <p key={index}>{err}</p>
-            ))}
-          </div>
-)}
-    {/* Email */}
-    <div className="flex flex-col gap-[5px]">
-      <label className="text-[10px] uppercase tracking-[1px] text-[#454666] font-semibold">
-        Email Address
-      </label>
-      <input
-        type="email"
-        name="email"
-        placeholder="you@example.com"
-        onChange={handleChange}
-        className="w-full bg-[#15161F] border border-[#2C2D42] rounded-[8px] px-[12px] py-[10px] text-[13px] outline-none focus:border-[#FF5533]"
-      />
-    </div>
+      {/* Password */}
+      <div className="flex flex-col gap-2">
+        <label className="text-xs uppercase tracking-wide text-gray-700 font-semibold">
+          Password
+        </label>
+        <input
+          type="password"
+          name="password"
+          placeholder="••••••••"
+          onChange={handleChange}
+          className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-200"
+        />
+      </div>
 
-    {/* Password */}
-    <div className="flex flex-col gap-[5px]">
-      <label className="text-[10px] uppercase tracking-[1px] text-[#454666] font-semibold">
-        Password
-      </label>
-      <input
-        type="password"
-        name="password"
-        placeholder="••••••••"
-        onChange={handleChange}
-        className="w-full bg-[#15161F] border border-[#2C2D42] rounded-[8px] px-[12px] py-[10px] text-[13px] outline-none focus:border-[#FF5533]"
-      />
-    </div>
+      {/* Forgot */}
+      <div className="text-right text-xs text-purple-600 hover:text-purple-800 cursor-pointer font-semibold">
+        Forgot password?
+      </div>
 
-    {/* Forgot */}
-    <div className="text-right text-[11px] text-[#FF5533] -mt-1">
-      Forgot password?
-    </div>
-
-    {/* Button */}
-    <button
-      className="w-full mt-2 bg-[#FF5533] text-white py-[12px] rounded-[9px] font-bold tracking-wide hover:bg-[#ff7755] transition"
-    >
-      Login →
-    </button>
-
-  </form>
-
-</div>
+      {/* Button */}
+      <button className="w-full mt-2 bg-purple-600 text-white py-2 rounded-lg font-bold hover:bg-purple-700 transition">
+        Login →
+      </button>
+    </form>
   );
-};
+}
 
-export default Login
+export default Login;

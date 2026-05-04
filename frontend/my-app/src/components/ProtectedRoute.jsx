@@ -13,7 +13,7 @@ const ProtectedRoute = ({ children, role }) => {
   }
 
   // Role mismatch
-  if (role && user.data.role !== role) {
+  if (role && user.role !== role) {
     return <Navigate to="/auth" replace />;
   }
 

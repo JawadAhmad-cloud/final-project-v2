@@ -3,7 +3,7 @@ const app = require("./src/app");
 const connectToDatabase = require("./src/db/db");
 const http = require("http");
 const socketIO = require("socket.io");
-// const agendaScheduler = require("./src/services/agenda.scheduler");
+const agendaScheduler = require("./src/services/agenda.scheduler");
 
 connectToDatabase();
 const port = 5000;
@@ -35,13 +35,13 @@ agendaScheduler.initializeAgenda(mongoUri).catch((error) => {
 // Graceful shutdown
 process.on("SIGINT", async () => {
   console.log("Shutting down gracefully...");
-  //   await agendaScheduler.stopAgenda();
-  //   server.close(() => {
-  //     console.log("Server closed");
-  //     process.exit(0);
-  //   });
-  // });
+  await agendaScheduler.stopAgenda();
+  server.close(() => {
+    console.log("Server closed");
+    process.exit(0);
+  });
 });
+
 server.listen(port, () => {
   console.log("server started successfully at port:" + port);
 });

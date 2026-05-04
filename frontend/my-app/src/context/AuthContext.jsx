@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user",user);
+    const storedUser = localStorage.getItem("user");
 
     if (storedUser && storedUser !== "undefined") {
       setUser(JSON.parse(storedUser));
@@ -75,16 +75,29 @@ export const AuthProvider = ({ children }) => {
       throw data;
     }
 
-    const user = data;
+    const user = data.data;
     setUser(user);
     localStorage.setItem("user", JSON.stringify(user));
     return user;
+  };
 
-    };
+  const logout = async () => {
+    try {
+      await fetch("http://localhost:5000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setUser(null);
+      localStorage.removeItem("user");
+    }
+  };
 
   return (
     <AuthContext.Provider
-      value={{ user, register, login, setRoleApi, setUser, loading }}
+      value={{ user, register, login, setRoleApi, setUser, loading, logout }}
     >
       {children}
     </AuthContext.Provider>
