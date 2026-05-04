@@ -21,32 +21,33 @@ const [error, seterror] = useState([])
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  seterror([]);
 
-    try {
-      const res = await register(form);
+  try {
+    const res = await register(form);
 
-      if (res?.data?.roleRequired) {
-        navigate("/role");
-      }
-    }catch (error) {
-  console.error("Error:", error);
-  if(error.errors){
-    seterror(error.errors.map((e)=>e.msg || e)) 
-    // get all the errors that comes from user validaiton in erorrs array
-  } else if(error?.message){
-    seterror([error.message])
-     
-  } else {
-    seterror(["Request failed"])
-  } 
-}
-finally{
-  setLoading(false)
-}
-  };
+    if (res?.data?.roleRequired) {
+      navigate("/role"); // correct
+    }
+
+  } catch (error) {
+    console.error("Error:", error);
+
+    if (error?.errors) {
+      seterror(error.errors.map((e) => e.msg || e));
+    } else if (error?.message) {
+      seterror([error.message]);
+    } else {
+      seterror(["Request failed"]);
+    }
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="flex items-center justify-center bg-[#07080F] text-[#F0F1FF]">

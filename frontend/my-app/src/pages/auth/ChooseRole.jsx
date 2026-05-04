@@ -8,22 +8,20 @@ function ChooseRole() {
   const [role, setRole] = useState("");
   const navigate = useNavigate();
 const {setRoleApi}=useContext(AuthContext)
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
   if (!role) return alert("Please select a role");
 
   try {
-    const res = await setRoleApi(role);
+    const user = await setRoleApi(role);
 
-    if (res.success) {
-      const userRole = res.data.role;
+    const userRole = user?.role;
 
-      if (userRole === "seller") {
-        navigate("/seller/dashboard");
-      } else if (userRole === "user") {
-        navigate("/user/dashboard");
-      }
+    if (userRole === "seller") {
+      navigate("/seller/dashboard");
+    } else if (userRole === "user") {
+      navigate("/user/dashboard");
     } else {
-      alert(res.message || "Failed to set the role");
+      alert("Role not found");
     }
 
   } catch (error) {

@@ -26,7 +26,6 @@ async function signUp(req, res) {
       message: "Validation failed",
       errors: errors.array().map((err) => err.msg),
     });
-    console.log(errors.array().map((err) => err.msg));
   }
 
   const { username, email, password } = req.body;
@@ -43,7 +42,6 @@ async function signUp(req, res) {
         data: null,
         message: "Username or email already exists",
       });
-      console.log(message);
     }
 
     // Hash password
@@ -83,7 +81,7 @@ async function signUp(req, res) {
       },
       message: "User created successfully. Please select a role.",
     });
-    console.log(message);
+
   } catch (error) {
     console.error("Sign up error:", error);
     res.status(500).json({
@@ -92,7 +90,6 @@ async function signUp(req, res) {
       message: "Internal server error",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
-    console.log(message);
   }
 }
 

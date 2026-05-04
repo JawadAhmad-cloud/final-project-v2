@@ -5,7 +5,7 @@ import { BiSupport } from "react-icons/bi";
 import { RiShieldLine } from "react-icons/ri";
 const AdBanner = () => {
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-100">
       
       {/* HERO */}
       <section className="flex flex-col md:flex-row items-center justify-between bg-gradient-to-r from-purple-100 to-purple-200 rounded-2xl p-10 relative overflow-hidden">
