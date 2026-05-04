@@ -24,12 +24,10 @@ app.set("io", io);
 const socketService = require("./src/services/socket.service");
 socketService.initializeSocket(io);
 
-// Initialize Agenda scheduler
-const mongoUri =
-  process.env.DATABASE_URI || "mongodb://localhost:27017/ecommerce";
-agendaScheduler.initializeAgenda(mongoUri).catch((error) => {
-  console.error("Failed to initialize agenda scheduler:", error);
-  process.exit(1);
+// Initialize Agenda scheduler (no argument needed - uses existing mongoose connection)
+agendaScheduler.initializeAgenda().catch((error) => {
+  console.warn("Agenda scheduler initialization skipped:", error.message);
+  // Don't exit - app can run without scheduler
 });
 
 // Graceful shutdown

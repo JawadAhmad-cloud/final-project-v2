@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@agendajs/mongo-backend": "^4.0.1",
     "@imagekit/nodejs": "^7.3.0",
     "agenda": "^6.2.4",
     "bcryptjs": "^3.0.2",
