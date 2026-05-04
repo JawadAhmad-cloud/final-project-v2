@@ -24,7 +24,7 @@ async function signUp(req, res) {
       success: false,
       data: null,
       message: "Validation failed",
-      errors: errors.array(),
+      errors: errors.array().map((err) => err.msg),
     });
   }
 
@@ -81,6 +81,7 @@ async function signUp(req, res) {
       },
       message: "User created successfully. Please select a role.",
     });
+
   } catch (error) {
     console.error("Sign up error:", error);
     res.status(500).json({
@@ -111,7 +112,7 @@ async function login(req, res) {
       success: false,
       data: null,
       message: "Validation failed",
-      errors: errors.array(),
+      errors: errors.array().map((err)=>err.msg),
     });
   }
 
