@@ -19,6 +19,8 @@ const UserRoutes = () => {
         <Route path="dashboard" element={<UserDashboard />} />
         <Route path="cart" element={<Cart />} />
         <Route path="favorites" element={<Favorites />} />
+
+        {/* profile page inside user scope */}
         <Route path="profile" element={<UserProfile />} />
       </Route>
     </Routes>

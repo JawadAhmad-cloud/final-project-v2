@@ -3,7 +3,6 @@ import { createContext, useEffect, useState } from "react";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +50,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem("user",user);
 
     if (storedUser && storedUser !== "undefined") {
       setUser(JSON.parse(storedUser));
@@ -76,11 +75,9 @@ export const AuthProvider = ({ children }) => {
       throw data;
     }
 
-    const user = data.data;
-
+    const user = data;
     setUser(user);
     localStorage.setItem("user", JSON.stringify(user));
-
     return user;
 
     };

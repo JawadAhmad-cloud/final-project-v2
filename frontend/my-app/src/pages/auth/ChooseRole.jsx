@@ -10,20 +10,14 @@ function ChooseRole() {
 const {setRoleApi}=useContext(AuthContext)
  const handleSubmit = async () => {
   if (!role) return alert("Please select a role");
-
   try {
     const user = await setRoleApi(role);
 
-    const userRole = user?.role;
-
-    if (userRole === "seller") {
-      navigate("/seller/dashboard");
-    } else if (userRole === "user") {
-      navigate("/user/dashboard");
+ if (user.success) {
+      navigate("/profile-complete");
     } else {
-      alert("Role not found");
+      alert(user.data.message || "Failed to set the role");
     }
-
   } catch (error) {
     console.error("Error:", error);
     alert(error.message || "Failed to set the role");

@@ -1,55 +1,45 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route} from "react-router-dom";
 
-// import Login from "../pages/Login";
-// import Register from "../pages/Register";
+import AuthPage from "../pages/auth/AuthPage";
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 import ChooseRole from "../pages/auth/ChooseRole";
-import UserDashboard from "../pages/user/UserDashboard";
-import SellerDashboard from "../pages/seller/SellerDashboard";
+import UserRoutes from "./UserRoutes";
+import { Navigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import Login from "../pages/auth/Login";
-import Register from "../pages/auth/Register"
-import ProtectedRoute from "../components/ProtectedRoute";
-import AuthPage from "../pages/auth/AuthPage";
-import UserRoutes from "./UserRoutes";
+import CompleteProfile from "../pages/auth/CompleteProfile";
+// import SellerRoutes from "./SellerRoutes";
+
 const AppRoutes = () => {
-    const {user}=useContext(AuthContext)
+  const {user} = useContext(AuthContext)
   return (
-    <Routes>
-  {/* default Routes; */}
-
- <Route
-    path="/"
-    element={
-      user ? (
-        user.role === "user"
-          ? <Navigate to="/user/dashboard" />
-          : <Navigate to="/seller/dashboard" />
-      ) : (
-        <Navigate to="/auth" />
-      )
-    }
-  />
-
-
-      {/* Public routes */}
-       <Route path="/auth" element={<AuthPage/>} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-    <Route path="/role" element={<ChooseRole />} />
-
-      <Route path="/user/*" element={<UserRoutes/>}/>
-
-      {/* Seller dashboard */}
+     <Routes>
+      {/* Root route FIX */}
       <Route
-        path="/seller/dashboard"
+        path="/"
         element={
-          <ProtectedRoute role="seller">
-            <SellerDashboard/>
-          </ProtectedRoute>
+          <Navigate
+            to={
+              user
+                ? user.role === "user"
+                  ? "/user/dashboard"
+                  : "/seller/dashboard"
+                : "/auth"
+            }
+            replace
+          />
         }
       />
-
+      {/* Public Routes */}
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/role" element={<ChooseRole />} />
+<Route path="/profile-complete" element={<CompleteProfile/>} />
+      {/* Protected Feature Routes */}
+      <Route path="/user/*" element={<UserRoutes />} />
+      {/* <Route path="/seller/*" element={<SellerRoutes />} /> */}
     </Routes>
   );
 };
