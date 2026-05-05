@@ -6,7 +6,7 @@ import Register from "../pages/auth/Register";
 import ChooseRole from "../pages/auth/ChooseRole";
 import UserRoutes from "./UserRoutes";
 import { Navigate } from "react-router-dom";
-import { useContext } from "react";
+// import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { AdminContext } from "../context/AdminContext";
 import CompleteProfile from "../pages/auth/CompleteProfile";

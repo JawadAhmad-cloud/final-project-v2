@@ -3,6 +3,9 @@ import { createContext, useEffect, useState } from "react";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const [cart, setcart] = useState(
+    JSON.parse(localStorage.getItem("cart")) ||[]
+  )
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -94,10 +97,62 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("user");
     }
   };
+const addToCart = (product) => {
+  const exists = cart.find((item) => item._id === product._id);
 
+  if (exists) {
+    setcart(
+      cart.map((item) =>
+        item._id === product._id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    );
+  } else {
+    setcart([...cart, { ...product, quantity: 1, isSelected: false }]);
+  }
+};
+useEffect(() => {
+ localStorage.setItem("cart",JSON.stringify(cart))
+}, [cart])
+
+const removeFromCart=(id)=>{
+setcart(cart.filter((item)=>item._id!==id))
+}
+  const increaseQty = (id) => {
+    setcart(
+      cart.map((item) =>
+        item._id === id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    );
+  };
+
+  // DECREASE QTY
+  const decreaseQty = (id) => {
+    setcart(
+      cart.map((item) =>
+        item._id === id && item.quantity > 1
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
+      )
+    );
+  };
+
+const removeOrderedItems = (orderedItems) => {
+  setcart((prevCart) =>
+    prevCart.filter(
+      (cartItem) =>
+        !orderedItems.some(
+          (orderItem) => orderItem.product === cartItem._id
+        )
+    )
+  );
+};
   return (
     <AuthContext.Provider
-      value={{ user, register, login, setRoleApi, setUser, loading, logout }}
+      value={{ user, register, login, setRoleApi, setUser, loading, logout, cart,addToCart,removeFromCart,increaseQty,decreaseQty, removeOrderedItems }}
     >
       {children}
     </AuthContext.Provider>
