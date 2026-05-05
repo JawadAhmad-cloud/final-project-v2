@@ -6,16 +6,16 @@ import Register from "../pages/auth/Register";
 import ChooseRole from "../pages/auth/ChooseRole";
 import UserRoutes from "./UserRoutes";
 import { Navigate } from "react-router-dom";
-import { useContext } from "react";
+// import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import CompleteProfile from "../pages/auth/CompleteProfile";
 import Home from "../pages/Home";
 // import SellerRoutes from "./SellerRoutes";
 
 const AppRoutes = () => {
-  const { user } = useContext(AuthContext);
+  // const { user } = useContext(AuthContext);
   return (
-    <Routes>
+    <Routes> 
       {/* Root route - Home page */}
       <Route path="/" element={<Home />} />
       {/* Public Routes */}

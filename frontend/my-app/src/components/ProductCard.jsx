@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const ProductCard = ({ product }) => {
-  if (!product) return null;
+  if (!product) return <h1>No Products</h1>;
 
   return (
     <Link to={`/product/${product._id}`}>
