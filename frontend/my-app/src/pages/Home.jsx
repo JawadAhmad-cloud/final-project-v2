@@ -10,7 +10,7 @@ const [products, setproducts] = useState([])
  const [loading, setLoading] = useState(true);
   const getProducts=async()=>{
    try {
-     const res=await fetch("http://localhost:500/api/product")
+     const res=await fetch("http://localhost:5000/api/product")
     const data=await res.json()
     if(data.success){
       setproducts(data.data)
@@ -30,9 +30,7 @@ const [products, setproducts] = useState([])
   <div>
       <UserNavbar />
       <AdBanner />
-
       <div className="text-center">
-
         {loading && (
           <div className="loading">
             <p>Loading products...</p>

@@ -1,16 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { FaHeart } from "react-icons/fa";
 import { useParams } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 
 function ProductDetailspage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
-
+  const {addToCart} = useContext(AuthContext)
+  const carthandler=()=>{
+    if(!product) return
+    addToCart({
+      _id:product._id,
+         name: product.name,
+    price: product.price,
+    image: product.images?.main,
+    seller: product.seller?.shopname
+    })
+  }
   const fetchProduct = async () => {
+    //fetching the products details from backend
     try {
       const res = await fetch(`http://localhost:5000/api/product/${id}`);
       const data = await res.json();
-
+        //setting the data in products
       if (data.success) {
         setProduct(data.data);
       }
@@ -25,7 +37,6 @@ function ProductDetailspage() {
   if (!product) {
     return <div className="p-10 text-center text-lg">Loading...</div>;
   }
-
   return (
     <div className="max-w-7xl mx-auto p-6">
 
@@ -87,7 +98,8 @@ function ProductDetailspage() {
 
           {/* BUTTONS */}
           <div className="flex gap-4 mt-3">
-            <button className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
+            <button  onClick={carthandler}
+             className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
               Add to Cart
             </button>
 
