@@ -65,6 +65,15 @@ const UserNavbar = () => {
               <span>My Account</span>
             </Link>
 
+            {user?.role === "seller" && (
+              <Link
+                to="/seller/analytics"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+              >
+                Seller Dashboard
+              </Link>
+            )}
+
             {/* Become Seller Button */}
             {user?.role === "user" && (
               <button

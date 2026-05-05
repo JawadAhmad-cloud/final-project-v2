@@ -84,26 +84,59 @@ async function getAnalytics(req, res) {
       },
     ]);
 
+    // Get revenue trends
+    const trends = await orderModel.aggregate([
+      {
+        $match: {
+          seller: shop._id,
+          sellerStatus: "completed",
+          updatedAt: { $gte: dateFrom },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$updatedAt",
+            },
+          },
+          revenue: { $sum: "$totalAmount" },
+          orders: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    // Calculate average order value for trends
+    const trendsWithAOV = trends.map((trend) => ({
+      ...trend,
+      averageOrderValue:
+        trend.orders > 0 ? (trend.revenue / trend.orders).toFixed(2) : 0,
+    }));
+
     res.status(200).json({
       success: true,
       data: {
-        period: period,
-        metrics: {
-          totalRevenue: totalRevenue,
-          totalSales: totalSales,
-          averageOrderValue:
-            totalSales > 0 ? (totalRevenue / totalSales).toFixed(2) : 0,
-        },
-        inventory: inventoryStats[0] || {
+        totalRevenue: totalRevenue,
+        totalSales: totalSales,
+        averageOrderValue:
+          totalSales > 0 ? (totalRevenue / totalSales).toFixed(2) : 0,
+        inventorySummary: inventoryStats[0] || {
           totalProducts: 0,
           totalStock: 0,
           totalReserved: 0,
           totalAvailable: 0,
         },
-        alerts: {
-          lowStockProducts: lowStockProducts,
-          lowStockCount: lowStockProducts.length,
-        },
+        lowStockAlerts: lowStockProducts.map((product) => ({
+          name: product.name,
+          currentStock: product.availableStock,
+          threshold: 10,
+          status: "Low",
+        })),
+        trends: trendsWithAOV,
       },
       message: "Analytics data retrieved successfully",
     });

@@ -12,9 +12,12 @@ const ProtectedRoute = ({ children, role }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Role mismatch
-  if (role && user.role !== role) {
-    return <Navigate to="/auth" replace />;
+  // Role mismatch: allow role prop as string or array of roles
+  if (role) {
+    const allowedRoles = Array.isArray(role) ? role : [role];
+    if (!allowedRoles.includes(user.role)) {
+      return <Navigate to="/auth" replace />;
+    }
   }
 
   return children;

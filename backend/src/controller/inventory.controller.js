@@ -51,7 +51,7 @@ async function getInventory(req, res) {
     const products = await productModel
       .find(filters)
       .select(
-        "name totalStock availableStock reservedStock price status rating",
+        "name category totalStock availableStock reservedStock price status rating",
       )
       .skip((page - 1) * limit)
       .limit(limit)

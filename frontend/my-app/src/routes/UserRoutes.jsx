@@ -10,7 +10,7 @@ const UserRoutes = () => {
     <Routes>
       <Route
         element={
-          <ProtectedRoute role="user">
+          <ProtectedRoute role={["user", "seller"]}>
             <UserLayout />
           </ProtectedRoute>
         }

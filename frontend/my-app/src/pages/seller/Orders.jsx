@@ -1,0 +1,515 @@
+import React, { useEffect, useState } from "react";
+
+const Orders = () => {
+  const [orders, setOrders] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [orderStatus, setOrderStatus] = useState("");
+  const [sellerStatus, setSellerStatus] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+
+  // Fetch seller orders
+  const fetchOrders = async (currentPage = 1) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const token = user?.token;
+
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: limit,
+        ...(orderStatus && { status: orderStatus }),
+        ...(sellerStatus && { sellerStatus }),
+      });
+
+      const response = await fetch(
+        `http://localhost:5000/api/seller/orders?${params}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to load orders");
+      }
+
+      const json = await response.json();
+
+      if (!json.success) {
+        throw new Error(json.message || "Orders request failed");
+      }
+
+      setOrders(json.data.items || []);
+      setTotalItems(json.data.total || 0);
+      setPage(currentPage);
+    } catch (err) {
+      setError(err.message || "Unable to load orders");
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Accept order
+  const acceptOrder = async (orderId) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const token = user?.token;
+
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/seller/orders/${orderId}/accept`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to accept order");
+      }
+
+      const json = await response.json();
+
+      if (!json.success) {
+        throw new Error(json.message || "Accept operation failed");
+      }
+
+      setSelectedOrderId(null);
+      fetchOrders(page);
+    } catch (err) {
+      setError(err.message || "Unable to accept order");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reject order
+  const rejectOrder = async (orderId) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const token = user?.token;
+
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/seller/orders/${orderId}/reject`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to reject order");
+      }
+
+      const json = await response.json();
+
+      if (!json.success) {
+        throw new Error(json.message || "Reject operation failed");
+      }
+
+      setSelectedOrderId(null);
+      fetchOrders(page);
+    } catch (err) {
+      setError(err.message || "Unable to reject order");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete order
+  const deleteOrder = async (orderId) => {
+    if (
+      !window.confirm("Are you sure you want to delete this completed order?")
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const token = user?.token;
+
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/seller/orders/${orderId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete order");
+      }
+
+      const json = await response.json();
+
+      if (!json.success) {
+        throw new Error(json.message || "Delete operation failed");
+      }
+
+      setSelectedOrderId(null);
+      fetchOrders(page);
+    } catch (err) {
+      setError(err.message || "Unable to delete order");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders(1);
+  }, [orderStatus, sellerStatus, limit]);
+
+  const totalPages = Math.ceil(totalItems / limit);
+
+  return (
+    <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+      <h1>Orders Management</h1>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <div
+        style={{
+          marginBottom: "20px",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "10px",
+        }}
+      >
+        <div>
+          <label
+            htmlFor="order-status"
+            style={{ display: "block", marginBottom: "5px" }}
+          >
+            Order Status:
+          </label>
+          <select
+            id="order-status"
+            value={orderStatus}
+            onChange={(e) => {
+              setOrderStatus(e.target.value);
+              setPage(1);
+            }}
+            style={{ width: "100%", padding: "8px" }}
+          >
+            <option value="">All Order Status</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="seller-status"
+            style={{ display: "block", marginBottom: "5px" }}
+          >
+            Seller Status:
+          </label>
+          <select
+            id="seller-status"
+            value={sellerStatus}
+            onChange={(e) => {
+              setSellerStatus(e.target.value);
+              setPage(1);
+            }}
+            style={{ width: "100%", padding: "8px" }}
+          >
+            <option value="">All Seller Status</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+
+      {loading && <p>Loading orders...</p>}
+
+      {!loading && orders.length === 0 && <p>No orders found</p>}
+
+      {!loading && orders.length > 0 && (
+        <div>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ backgroundColor: "#f5f5f5" }}>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Order ID
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Customer
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Order Status
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Seller Status
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Total Amount
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    border: "1px solid #ddd",
+                  }}
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order._id || order.id}>
+                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    {order._id || order.id || "N/A"}
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    {order.customerName || "N/A"}
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    <span
+                      style={{
+                        padding: "4px 8px",
+                        backgroundColor:
+                          order.status === "delivered"
+                            ? "#28a745"
+                            : order.status === "shipped"
+                              ? "#17a2b8"
+                              : order.status === "rejected"
+                                ? "#dc3545"
+                                : "#ffc107",
+                        color: "white",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {order.status || "pending"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    <span
+                      style={{
+                        padding: "4px 8px",
+                        backgroundColor:
+                          order.sellerStatus === "accepted"
+                            ? "#28a745"
+                            : order.sellerStatus === "completed"
+                              ? "#17a2b8"
+                              : order.sellerStatus === "rejected"
+                                ? "#dc3545"
+                                : "#ffc107",
+                        color: "white",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {order.sellerStatus || "pending"}
+                    </span>
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    ${parseFloat(order.totalAmount || 0).toFixed(2)}
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    <div
+                      style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}
+                    >
+                      {order.sellerStatus === "pending" && (
+                        <>
+                          <button
+                            onClick={() => acceptOrder(order._id || order.id)}
+                            disabled={loading}
+                            style={{
+                              padding: "4px 8px",
+                              backgroundColor: "#28a745",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: loading ? "default" : "pointer",
+                              fontSize: "12px",
+                              opacity: loading ? 0.5 : 1,
+                            }}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => rejectOrder(order._id || order.id)}
+                            disabled={loading}
+                            style={{
+                              padding: "4px 8px",
+                              backgroundColor: "#dc3545",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: loading ? "default" : "pointer",
+                              fontSize: "12px",
+                              opacity: loading ? 0.5 : 1,
+                            }}
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      {order.sellerStatus === "completed" && (
+                        <button
+                          onClick={() => deleteOrder(order._id || order.id)}
+                          disabled={loading}
+                          style={{
+                            padding: "4px 8px",
+                            backgroundColor: "#dc3545",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: loading ? "default" : "pointer",
+                            fontSize: "12px",
+                            opacity: loading ? 0.5 : 1,
+                          }}
+                        >
+                          Delete
+                        </button>
+                      )}
+                      {order.sellerStatus !== "pending" &&
+                        order.sellerStatus !== "completed" && (
+                          <button
+                            disabled
+                            style={{
+                              padding: "4px 8px",
+                              backgroundColor: "#6c757d",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: "default",
+                              fontSize: "12px",
+                            }}
+                          >
+                            No Actions
+                          </button>
+                        )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {totalPages > 1 && (
+            <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => fetchOrders(page - 1)}
+                disabled={page === 1}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: page === 1 ? "#ccc" : "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: page === 1 ? "default" : "pointer",
+                }}
+              >
+                Previous
+              </button>
+              <span style={{ alignSelf: "center" }}>
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => fetchOrders(page + 1)}
+                disabled={page === totalPages}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: page === totalPages ? "#ccc" : "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: page === totalPages ? "default" : "pointer",
+                }}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Orders;

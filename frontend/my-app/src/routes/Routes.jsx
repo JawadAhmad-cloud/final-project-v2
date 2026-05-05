@@ -10,7 +10,8 @@ import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import CompleteProfile from "../pages/auth/CompleteProfile";
 import Home from "../pages/Home";
-// import SellerRoutes from "./SellerRoutes";
+
+import SellerRoutes from "./SellerRoutes";
 
 const AppRoutes = () => {
   const { user } = useContext(AuthContext);
@@ -26,7 +27,7 @@ const AppRoutes = () => {
       <Route path="/profile-complete" element={<CompleteProfile />} />
       {/* Protected Feature Routes */}
       <Route path="/user/*" element={<UserRoutes />} />
-      {/* <Route path="/seller/*" element={<SellerRoutes />} /> */}
+      <Route path="/seller/*" element={<SellerRoutes />} />
     </Routes>
   );
 };
