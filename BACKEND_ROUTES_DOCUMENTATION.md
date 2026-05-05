@@ -2013,6 +2013,144 @@ This document provides a comprehensive guide to all API routes in the backend, i
 
 ---
 
+## Admin Analytics Routes
+
+**Base URL:** `/api/admin/analytics`
+**Authentication:** Required (Role: admin)
+
+### 1. Get Platform Analytics
+
+- **Endpoint:** `GET /api/admin/analytics/`
+- **Description:** Get platform-wide analytics including revenue, orders, shops, and users stats
+- **Authentication:** Required (Role: admin)
+- **Query Parameters:**
+  - `period` (string, optional): Analytics period (day, week, month, year) (default: month)
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "revenue": {
+        "total": "number",
+        "average": "number",
+        "period": "string"
+      },
+      "orders": {
+        "total": "number",
+        "statusDistribution": {
+          "pending": "number",
+          "completed": "number",
+          "rejected": "number",
+          "shipped": "number"
+        }
+      },
+      "shops": {
+        "total": "number",
+        "verified": "number",
+        "pending": "number",
+        "rejected": "number"
+      },
+      "users": {
+        "total": "number",
+        "sellers": "number",
+        "admins": "number"
+      }
+    },
+    "message": "Platform analytics retrieved successfully"
+  }
+  ```
+
+### 2. Get Revenue Trends
+
+- **Endpoint:** `GET /api/admin/analytics/revenue-trends`
+- **Description:** Get revenue trends over time with order and average value data
+- **Authentication:** Required (Role: admin)
+- **Query Parameters:**
+  - `period` (string, optional): Aggregation period (day, week, month, year) (default: month)
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "date": "string (YYYY-MM-DD format)",
+        "revenue": "number",
+        "orders": "number",
+        "averageOrderValue": "number"
+      }
+    ],
+    "message": "Revenue trends retrieved successfully"
+  }
+  ```
+
+### 3. Get Shop Statistics
+
+- **Endpoint:** `GET /api/admin/analytics/shop-stats`
+- **Description:** Get shop statistics and top shops by revenue
+- **Authentication:** Required (Role: admin)
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "topShops": [
+        {
+          "sellerId": "string",
+          "shopName": "string",
+          "totalOrders": "number",
+          "totalRevenue": "number"
+        }
+      ],
+      "distribution": {
+        "verified": "number",
+        "pending": "number",
+        "rejected": "number"
+      }
+    },
+    "message": "Shop statistics retrieved successfully"
+  }
+  ```
+
+### 4. Get Order Statistics
+
+- **Endpoint:** `GET /api/admin/analytics/order-stats`
+- **Description:** Get order statistics across all sellers with status distribution
+- **Authentication:** Required (Role: admin)
+- **Success Response (200):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "statusDistribution": {
+        "pending": {
+          "count": "number",
+          "revenue": "number"
+        },
+        "completed": {
+          "count": "number",
+          "revenue": "number"
+        },
+        "rejected": {
+          "count": "number",
+          "revenue": "number"
+        },
+        "shipped": {
+          "count": "number",
+          "revenue": "number"
+        }
+      },
+      "totals": {
+        "totalOrders": "number",
+        "totalRevenue": "number",
+        "averageOrderValue": "number"
+      }
+    },
+    "message": "Order statistics retrieved successfully"
+  }
+  ```
+
+---
+
 ## Response Status Codes Summary
 
 | Code | Meaning               | Common Use                               |

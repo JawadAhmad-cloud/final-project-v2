@@ -149,7 +149,7 @@ async function processPayment(checkoutId, verificationData) {
 async function addSellerRevenue(sellerId, amount, paymentId) {
   try {
     const shop = await Shop.findOne({ seller: sellerId });
-    if (!shop) return;
+    if (!shop) return { success: false, message: "Shop not found" };
 
     // Update shop revenue
     shop.totalRevenue = (shop.totalRevenue || 0) + amount;
