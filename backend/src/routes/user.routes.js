@@ -35,6 +35,19 @@ routes.post(
 routes.get("/profile", userController.getUserProfile);
 
 /**
+ * PUT /profile
+ * @description Update user profile information
+ * @param {Object} req.body - Profile fields to update (all optional)
+ * @param {String} req.body.firstname - First name (optional)
+ * @param {String} req.body.lastname - Last name (optional)
+ * @param {String} req.body.phonenumber - Phone number (optional)
+ * @param {Date} req.body.dob - Date of birth (optional)
+ * @returns {Object} {success: Boolean, data: Object, message: String}
+ * @middleware Authentication required
+ */
+routes.put("/profile", userController.updateUserProfile);
+
+/**
  * POST /address
  * @description Add a new address to user profile
  * @param {Object} req.body - Address information

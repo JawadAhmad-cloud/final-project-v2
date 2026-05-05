@@ -8,6 +8,8 @@ const userRoute = require("./routes/user.routes");
 const sellerRoute = require("./routes/seller.routes");
 const adminRoute = require("./routes/admin.routes");
 const adminManagementRoute = require("./routes/adminmanagement.routes");
+const adminAnalyticsRoute = require("./routes/admin-analytics.routes");
+const adminSettingsRoute = require("./routes/adminsettings.routes");
 const favouriteRoute = require("./routes/favourite.routes");
 const productRoute = require("./routes/product.routes");
 const publicProductRoute = require("./routes/public-product.routes");
@@ -96,6 +98,22 @@ app.use(
   authMiddleware,
   roleMiddleware("admin"),
   adminManagementRoute,
+);
+
+// Admin analytics routes (admin only)
+app.use(
+  "/api/admin/analytics",
+  authMiddleware,
+  roleMiddleware("admin"),
+  adminAnalyticsRoute,
+);
+
+// Admin settings routes (admin only)
+app.use(
+  "/api/admin/settings",
+  authMiddleware,
+  roleMiddleware("admin"),
+  adminSettingsRoute,
 );
 
 // Order routes (checkout, payment, shipping, invoicing)

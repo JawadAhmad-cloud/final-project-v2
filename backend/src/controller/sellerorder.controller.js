@@ -83,7 +83,9 @@ async function getSellerOrders(req, res) {
     res.status(200).json({
       success: true,
       data: {
+        items: orders, // For frontend compatibility
         orders,
+        total: totalCount, // For frontend compatibility
         summary: {
           totalOrders,
           pendingOrders,

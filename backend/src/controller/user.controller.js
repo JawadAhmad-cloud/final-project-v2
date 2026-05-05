@@ -23,7 +23,7 @@ async function completeProfile(req, res) {
       success: false,
       data: null,
       message: "Validation failed",
-      errors: errors.array().map((err)=>err.msg ||err),
+      errors: errors.array().map((err) => err.msg || err),
     });
   }
 
@@ -353,9 +353,75 @@ async function deleteAddress(req, res) {
   }
 }
 
+/**
+ * Update User Profile Handler
+ * @async
+ * @param {Object} req - Express request object
+ * @param {String} req.user.id - User ID from token (middleware)
+ * @param {Object} req.body - Profile fields to update (all optional)
+ * @param {String} req.body.firstname - First name (optional)
+ * @param {String} req.body.lastname - Last name (optional)
+ * @param {String} req.body.phonenumber - Phone number (optional)
+ * @param {Date} req.body.dob - Date of birth (optional)
+ * @param {Object} res - Express response object
+ * @returns {Object} {success: Boolean, data: Object, message: String}
+ * @description Updates user profile information
+ */
+async function updateUserProfile(req, res) {
+  const userId = req.user.id;
+  const { firstname, lastname, phonenumber, dob } = req.body;
+
+  try {
+    const updateData = {};
+
+    if (firstname !== undefined) updateData.firstname = firstname;
+    if (lastname !== undefined) updateData.lastname = lastname;
+    if (phonenumber !== undefined) updateData.phonenumber = phonenumber;
+    if (dob !== undefined) updateData.dob = dob;
+
+    const updatedUser = await userModel.findByIdAndUpdate(userId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: updatedUser._id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        firstname: updatedUser.firstname,
+        lastname: updatedUser.lastname,
+        phonenumber: updatedUser.phonenumber,
+        dob: updatedUser.dob,
+        addresses: updatedUser.addresses,
+        role: updatedUser.role,
+      },
+      message: "Profile updated successfully",
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({
+      success: false,
+      data: null,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+}
+
 module.exports = {
   completeProfile,
   getUserProfile,
+  updateUserProfile,
   addAddress,
   updateAddress,
   deleteAddress,

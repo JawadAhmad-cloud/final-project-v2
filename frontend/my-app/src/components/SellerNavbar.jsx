@@ -1,7 +1,51 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const SellerNavbar = () => {
+  const [hasShop, setHasShop] = useState(false);
+  const [checkingShop, setCheckingShop] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    checkIfShopExists();
+  }, []);
+
+  const checkIfShopExists = async () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const token = user?.token;
+
+      if (!token) {
+        setCheckingShop(false);
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/seller/shop", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success) {
+          setHasShop(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking shop:", error);
+    } finally {
+      setCheckingShop(false);
+    }
+  };
+
+  const handleCreateShop = () => {
+    navigate("/seller/create-shop");
+  };
+
   const navItems = [
     { label: "Analytics", path: "/seller/analytics" },
     { label: "Inventory", path: "/seller/inventory" },
@@ -44,9 +88,38 @@ const SellerNavbar = () => {
     color: "#ffffff",
   };
 
+  const createShopButtonStyle = {
+    padding: "12px 14px",
+    borderRadius: "10px",
+    backgroundColor: "#10b981",
+    color: "#ffffff",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "0.98rem",
+    fontWeight: "600",
+    transition: "background-color 0.2s ease",
+    marginBottom: "12px",
+  };
+
   return (
     <aside style={sidebarStyle}>
       <h2 style={titleStyle}>Seller Navigation</h2>
+
+      {!hasShop && !checkingShop && (
+        <button
+          onClick={handleCreateShop}
+          style={createShopButtonStyle}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = "#059669";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = "#10b981";
+          }}
+        >
+          + Create Shop
+        </button>
+      )}
+
       {navItems.map((item) => (
         <NavLink
           key={item.path}
