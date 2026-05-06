@@ -148,7 +148,10 @@ async function processPayment(checkoutId, verificationData) {
 // Add revenue to seller
 async function addSellerRevenue(sellerId, amount, paymentId) {
   try {
-    const shop = await Shop.findOne({ seller: sellerId });
+    // sellerId here is the shop id stored on the product/order, not the seller user id
+    const shop =
+      (await Shop.findById(sellerId)) ||
+      (await Shop.findOne({ seller: sellerId }));
     if (!shop) return { success: false, message: "Shop not found" };
 
     // Update shop revenue

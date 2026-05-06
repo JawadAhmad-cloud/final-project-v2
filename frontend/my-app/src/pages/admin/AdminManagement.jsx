@@ -164,10 +164,7 @@ export default function AdminManagement() {
                 </thead>
                 <tbody>
                   {admins.map((admin) => (
-                    <tr
-                      key={admin.adminId}
-                      className="border-b hover:bg-gray-50"
-                    >
+                    <tr key={admin._id} className="border-b hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
                           <FaUser className="text-indigo-600" />
@@ -189,7 +186,7 @@ export default function AdminManagement() {
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => handleRemoveAdmin(admin.adminId)}
+                          onClick={() => handleRemoveAdmin(admin._id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                         >
                           <FaTrash />

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
+  const [shop, setShop] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -54,6 +55,36 @@ const Profile = () => {
       setProfile(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch shop details
+  const fetchShopDetails = async () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const token = user?.token;
+
+      if (!token) {
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/seller/shop", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success) {
+          setShop(json.data || null);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching shop details:", err);
     }
   };
 
@@ -204,6 +235,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchShopDetails();
   }, []);
 
   return (
@@ -274,6 +306,82 @@ const Profile = () => {
               </div>
             </div>
           </section>
+
+          {shop && (
+            <section
+              style={{
+                marginBottom: "30px",
+                padding: "20px",
+                backgroundColor: "#f0f9ff",
+                borderRadius: "8px",
+                border: "2px solid #007bff",
+              }}
+            >
+              <h2>Shop Details</h2>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "15px",
+                }}
+              >
+                <div>
+                  <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
+                    Shop Name:
+                  </p>
+                  <p>{shop.shopname || "N/A"}</p>
+                </div>
+                <div>
+                  <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
+                    Verification Status:
+                  </p>
+                  <p
+                    style={{
+                      color:
+                        shop.isverified === "verified" ? "#28a745" : "#ffc107",
+                      fontWeight: "bold",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {shop.isverified || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
+                    Shop Address:
+                  </p>
+                  <p>
+                    {typeof shop.shopaddress === "string"
+                      ? shop.shopaddress
+                      : shop.shopaddress
+                        ? `${shop.shopaddress.street || ""}, ${shop.shopaddress.city || ""}, ${shop.shopaddress.postalcode || ""}, ${shop.shopaddress.country || ""}`.replace(
+                            /^, |, $/,
+                            "",
+                          )
+                        : "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
+                    Phone Number:
+                  </p>
+                  <p>{shop.phonenumber || "N/A"}</p>
+                </div>
+                <div>
+                  <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
+                    Total Transaction:
+                  </p>
+                  <p>${parseFloat(shop.totaltransaction || 0).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
+                    Bank Account:
+                  </p>
+                  <p>{shop.bankaccount ? "Verified" : "Not Verified"}</p>
+                </div>
+              </div>
+            </section>
+          )}
 
           <section style={{ marginBottom: "30px" }}>
             <div

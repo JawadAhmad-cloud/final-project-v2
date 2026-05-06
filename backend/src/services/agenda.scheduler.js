@@ -55,11 +55,26 @@ async function initializeAgenda() {
 
         // Update order status to delivered
         order.status = "delivered";
+        order.sellerStatus = "completed"; // Mark as completed for analytics
         if (order.shipping) {
           order.shipping.status = "delivered";
           order.shipping.deliveredAt = new Date();
         }
         await order.save();
+
+        // Decrement reserved stock for delivered items
+        const Product = require("../model/product.model");
+        for (const item of order.items) {
+          const product = await Product.findById(item.product);
+          if (product) {
+            product.reservedStock = Math.max(
+              0,
+              (product.reservedStock || 0) - item.quantity,
+            );
+            product.availableStock = product.totalStock - product.reservedStock;
+            await product.save();
+          }
+        }
 
         console.log(
           `Order ${orderId} automatically updated to delivered status`,
@@ -108,8 +123,6 @@ async function scheduleOrderDelivery(orderId, deliveryTime) {
       orderId,
     });
 
-    await job.save();
-
     console.log(
       `Scheduled delivery update for order ${orderId} at ${deliveryTime.toISOString()}`,
     );
@@ -147,7 +160,9 @@ async function distributePaymentToSeller(orderId) {
     const sellerAmount = payment.amount - platformFee;
 
     // Add revenue to seller's shop
-    const shop = await Shop.findOne({ seller: order.seller });
+    const shop =
+      (await Shop.findById(order.seller)) ||
+      (await Shop.findOne({ seller: order.seller }));
     if (shop) {
       shop.totalRevenue = (shop.totalRevenue || 0) + sellerAmount;
       shop.earnings = (shop.earnings || 0) + sellerAmount;
@@ -158,7 +173,7 @@ async function distributePaymentToSeller(orderId) {
       }
 
       shop.transactions.push({
-        type: "delivery_payment",
+        type: "payment",
         amount: sellerAmount,
         date: new Date(),
         paymentId: payment._id,

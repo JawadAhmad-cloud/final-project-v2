@@ -1,11 +1,17 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
+
+// Component to handle checkout redirects with proper parameter interpolation
+const CheckoutRedirect = () => {
+  const { orderId } = useParams();
+  return <Navigate to={`/user/checkout/${orderId}`} replace />;
+};
 
 import AuthPage from "../pages/auth/AuthPage";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ChooseRole from "../pages/auth/ChooseRole";
 import UserRoutes from "./UserRoutes";
-import { Navigate } from "react-router-dom";
+
 // import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { AdminContext } from "../context/AdminContext";
@@ -14,6 +20,7 @@ import Home from "../pages/Home";
 import AdminLogin from "../pages/admin/AdminLogin";
 import AdminRoutes from "./AdminRoutes";
 import SellerRoutes from "./SellerRoutes";
+import { useContext } from "react";
 
 const AppRoutes = () => {
   const { user } = useContext(AuthContext);
@@ -27,6 +34,12 @@ const AppRoutes = () => {
     <Routes>
       {/* Root route - Home page */}
       <Route path="/" element={<Home />} />
+      {/* Checkout redirect for backward compatibility */}
+      <Route
+        path="/checkout"
+        element={<Navigate to="/user/checkout" replace />}
+      />
+      <Route path="/checkout/:orderId" element={<CheckoutRedirect />} />
       {/* Public Routes */}
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/login" element={<Login />} />

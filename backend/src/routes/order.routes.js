@@ -230,11 +230,14 @@ routes.post("/ship/:orderId", async (req, res) => {
     if (result.data?.estimatedDelivery) {
       const scheduleResult = await agendaScheduler.scheduleOrderDelivery(
         orderId,
-        new Date(result.data.estimatedDelivery)
+        new Date(result.data.estimatedDelivery),
       );
 
       if (!scheduleResult.success) {
-        console.error("Failed to schedule delivery update:", scheduleResult.message);
+        console.error(
+          "Failed to schedule delivery update:",
+          scheduleResult.message,
+        );
       }
     }
 
@@ -426,6 +429,101 @@ routes.get("/seller/:sellerId/sales", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching sales",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+});
+
+/**
+ * GET /
+ * @description Get all user orders with pagination
+ * @param {Number} req.query.page - Page number (default: 1)
+ * @param {Number} req.query.limit - Items per page (default: 10)
+ * @returns {Object} {success: Boolean, data: Array, message: String}
+ * @middleware Authentication required
+ */
+routes.get("/", async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 10;
+
+    const orders = await Order.find({ user: userId })
+      .populate("seller", "shopname shopaddress")
+      .populate("items.product", "name price")
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Order.countDocuments({ user: userId });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        items: orders,
+        total: total,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(total / limit),
+        },
+      },
+      message: "Orders retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching orders",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+});
+
+/**
+ * GET /:orderId
+ * @description Get order details by ID
+ * @param {String} req.params.orderId - Order ID
+ * @returns {Object} {success: Boolean, data: Object, message: String}
+ * @middleware Authentication required
+ */
+routes.get("/:orderId", async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId)
+      .populate("seller", "shopname shopaddress")
+      .populate("items.product", "name price images");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Verify user owns this order
+    if (
+      order.user.toString() !== userId &&
+      order.seller.toString() !== userId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized access to this order",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: order,
+      message: "Order retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching order",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }

@@ -132,7 +132,7 @@ async function distributePaymentToSeller(orderId) {
       }
 
       shop.transactions.push({
-        type: "delivery_payment",
+        type: "payment",
         amount: sellerAmount,
         date: new Date(),
         paymentId: payment._id,

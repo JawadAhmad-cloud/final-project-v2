@@ -4,8 +4,8 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [cart, setcart] = useState(
-    JSON.parse(localStorage.getItem("cart")) ||[]
-  )
+    JSON.parse(localStorage.getItem("cart")) || [],
+  );
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -97,35 +97,33 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("user");
     }
   };
-const addToCart = (product) => {
-  const exists = cart.find((item) => item._id === product._id);
+  const addToCart = (product) => {
+    const exists = cart.find((item) => item._id === product._id);
 
-  if (exists) {
-    setcart(
-      cart.map((item) =>
-        item._id === product._id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    );
-  } else {
-    setcart([...cart, { ...product, quantity: 1, isSelected: false }]);
-  }
-};
-useEffect(() => {
- localStorage.setItem("cart",JSON.stringify(cart))
-}, [cart])
+    if (exists) {
+      setcart(
+        cart.map((item) =>
+          item._id === product._id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item,
+        ),
+      );
+    } else {
+      setcart([...cart, { ...product, quantity: 1, isSelected: true }]);
+    }
+  };
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
 
-const removeFromCart=(id)=>{
-setcart(cart.filter((item)=>item._id!==id))
-}
+  const removeFromCart = (id) => {
+    setcart(cart.filter((item) => item._id !== id));
+  };
   const increaseQty = (id) => {
     setcart(
       cart.map((item) =>
-        item._id === id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
+        item._id === id ? { ...item, quantity: item.quantity + 1 } : item,
+      ),
     );
   };
 
@@ -135,24 +133,45 @@ setcart(cart.filter((item)=>item._id!==id))
       cart.map((item) =>
         item._id === id && item.quantity > 1
           ? { ...item, quantity: item.quantity - 1 }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
-const removeOrderedItems = (orderedItems) => {
-  setcart((prevCart) =>
-    prevCart.filter(
-      (cartItem) =>
-        !orderedItems.some(
-          (orderItem) => orderItem.product === cartItem._id
-        )
-    )
-  );
-};
+  const removeOrderedItems = (orderedItems) => {
+    setcart((prevCart) =>
+      prevCart.filter(
+        (cartItem) =>
+          !orderedItems.some((orderItem) => orderItem.product === cartItem._id),
+      ),
+    );
+  };
+
+  const toggleSelect = (id) => {
+    setcart(
+      cart.map((item) =>
+        item._id === id ? { ...item, isSelected: !item.isSelected } : item,
+      ),
+    );
+  };
   return (
     <AuthContext.Provider
-      value={{ user, register, login, setRoleApi, setUser, loading, logout, cart,addToCart,removeFromCart,increaseQty,decreaseQty, removeOrderedItems }}
+      value={{
+        user,
+        register,
+        login,
+        setRoleApi,
+        setUser,
+        loading,
+        logout,
+        cart,
+        addToCart,
+        removeFromCart,
+        increaseQty,
+        decreaseQty,
+        removeOrderedItems,
+        toggleSelect,
+      }}
     >
       {children}
     </AuthContext.Provider>

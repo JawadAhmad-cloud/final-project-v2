@@ -202,6 +202,55 @@ const Orders = () => {
     }
   };
 
+  // Ship order
+  const shipOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to ship this order?")) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const token = user?.token;
+
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/order/ship/${orderId}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to ship order");
+      }
+
+      const json = await response.json();
+
+      if (!json.success) {
+        throw new Error(json.message || "Ship operation failed");
+      }
+
+      setSelectedOrderId(null);
+      fetchOrders(page);
+    } catch (err) {
+      setError(err.message || "Unable to ship order");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchOrders(1);
   }, [orderStatus, sellerStatus, limit]);
@@ -315,6 +364,15 @@ const Orders = () => {
                     border: "1px solid #ddd",
                   }}
                 >
+                  Shipping Status
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    border: "1px solid #ddd",
+                  }}
+                >
                   Seller Status
                 </th>
                 <th
@@ -339,80 +397,141 @@ const Orders = () => {
             </thead>
             <tbody>
               {orders.map((order) => (
-                <tr key={order._id || order.id}>
-                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                    {order._id || order.id || "N/A"}
-                  </td>
-                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                    {order.customerName || "N/A"}
-                  </td>
-                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                    <span
-                      style={{
-                        padding: "4px 8px",
-                        backgroundColor:
-                          order.status === "delivered"
-                            ? "#28a745"
-                            : order.status === "shipped"
-                              ? "#17a2b8"
-                              : order.status === "rejected"
-                                ? "#dc3545"
+                <React.Fragment key={order._id || order.id}>
+                  <tr>
+                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                      {order._id || order.id || "N/A"}
+                    </td>
+                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                      {order.user?.username || "N/A"}
+                    </td>
+                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                      <span
+                        style={{
+                          padding: "4px 8px",
+                          backgroundColor:
+                            order.status === "delivered"
+                              ? "#28a745"
+                              : order.status === "shipped"
+                                ? "#17a2b8"
+                                : order.status === "rejected"
+                                  ? "#dc3545"
+                                  : "#ffc107",
+                          color: "white",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                        }}
+                      >
+                        {order.status || "pending"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                      <span
+                        style={{
+                          padding: "4px 8px",
+                          backgroundColor:
+                            order.shipping?.status === "delivered"
+                              ? "#28a745"
+                              : order.shipping?.status === "in_transit"
+                                ? "#17a2b8"
                                 : "#ffc107",
-                        color: "white",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                      }}
-                    >
-                      {order.status || "pending"}
-                    </span>
-                  </td>
-                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                    <span
-                      style={{
-                        padding: "4px 8px",
-                        backgroundColor:
-                          order.sellerStatus === "accepted"
-                            ? "#28a745"
-                            : order.sellerStatus === "completed"
-                              ? "#17a2b8"
-                              : order.sellerStatus === "rejected"
-                                ? "#dc3545"
-                                : "#ffc107",
-                        color: "white",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                      }}
-                    >
-                      {order.sellerStatus || "pending"}
-                    </span>
-                  </td>
-                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                    ${parseFloat(order.totalAmount || 0).toFixed(2)}
-                  </td>
-                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                    <div
-                      style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}
-                    >
-                      {order.sellerStatus === "pending" && (
-                        <>
+                          color: "white",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                        }}
+                      >
+                        {order.shipping?.status || "pending"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                      <span
+                        style={{
+                          padding: "4px 8px",
+                          backgroundColor:
+                            order.sellerStatus === "accepted"
+                              ? "#28a745"
+                              : order.sellerStatus === "completed"
+                                ? "#17a2b8"
+                                : order.sellerStatus === "rejected"
+                                  ? "#dc3545"
+                                  : "#ffc107",
+                          color: "white",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                        }}
+                      >
+                        {order.sellerStatus || "pending"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                      ${parseFloat(order.totalAmount || 0).toFixed(2)}
+                    </td>
+                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "5px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {order.sellerStatus === "pending" && (
+                          <>
+                            <button
+                              onClick={() => acceptOrder(order._id || order.id)}
+                              disabled={loading}
+                              style={{
+                                padding: "4px 8px",
+                                backgroundColor: "#28a745",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: loading ? "default" : "pointer",
+                                fontSize: "12px",
+                                opacity: loading ? 0.5 : 1,
+                              }}
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => rejectOrder(order._id || order.id)}
+                              disabled={loading}
+                              style={{
+                                padding: "4px 8px",
+                                backgroundColor: "#dc3545",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: loading ? "default" : "pointer",
+                                fontSize: "12px",
+                                opacity: loading ? 0.5 : 1,
+                              }}
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {order.sellerStatus === "accepted" &&
+                          order.shipping?.status === "pending" && (
+                            <button
+                              onClick={() => shipOrder(order._id || order.id)}
+                              disabled={loading}
+                              style={{
+                                padding: "4px 8px",
+                                backgroundColor: "#007bff",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: loading ? "default" : "pointer",
+                                fontSize: "12px",
+                                opacity: loading ? 0.5 : 1,
+                              }}
+                            >
+                              Ship
+                            </button>
+                          )}
+                        {order.sellerStatus === "completed" && (
                           <button
-                            onClick={() => acceptOrder(order._id || order.id)}
-                            disabled={loading}
-                            style={{
-                              padding: "4px 8px",
-                              backgroundColor: "#28a745",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: loading ? "default" : "pointer",
-                              fontSize: "12px",
-                              opacity: loading ? 0.5 : 1,
-                            }}
-                          >
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => rejectOrder(order._id || order.id)}
+                            onClick={() => deleteOrder(order._id || order.id)}
                             disabled={loading}
                             style={{
                               padding: "4px 8px",
@@ -425,48 +544,135 @@ const Orders = () => {
                               opacity: loading ? 0.5 : 1,
                             }}
                           >
-                            Reject
+                            Delete
                           </button>
-                        </>
-                      )}
-                      {order.sellerStatus === "completed" && (
+                        )}
                         <button
-                          onClick={() => deleteOrder(order._id || order.id)}
-                          disabled={loading}
+                          onClick={() =>
+                            setSelectedOrderId(
+                              selectedOrderId === (order._id || order.id)
+                                ? null
+                                : order._id || order.id,
+                            )
+                          }
                           style={{
                             padding: "4px 8px",
-                            backgroundColor: "#dc3545",
+                            backgroundColor: "#6c757d",
                             color: "white",
                             border: "none",
                             borderRadius: "4px",
-                            cursor: loading ? "default" : "pointer",
+                            cursor: "pointer",
                             fontSize: "12px",
-                            opacity: loading ? 0.5 : 1,
                           }}
                         >
-                          Delete
+                          {selectedOrderId === (order._id || order.id)
+                            ? "Hide Details"
+                            : "Details"}
                         </button>
-                      )}
-                      {order.sellerStatus !== "pending" &&
-                        order.sellerStatus !== "completed" && (
-                          <button
-                            disabled
-                            style={{
-                              padding: "4px 8px",
-                              backgroundColor: "#6c757d",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "default",
-                              fontSize: "12px",
-                            }}
-                          >
-                            No Actions
-                          </button>
-                        )}
-                    </div>
-                  </td>
-                </tr>
+                        {order.sellerStatus !== "pending" &&
+                          order.sellerStatus !== "completed" && (
+                            <button
+                              disabled
+                              style={{
+                                padding: "4px 8px",
+                                backgroundColor: "#6c757d",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: "default",
+                                fontSize: "12px",
+                              }}
+                            >
+                              No Actions
+                            </button>
+                          )}
+                      </div>
+                    </td>
+                  </tr>
+                  {selectedOrderId === (order._id || order.id) && (
+                    <tr
+                      key={`details-${order._id || order.id}`}
+                      style={{ backgroundColor: "#f9f9f9" }}
+                    >
+                      <td
+                        colSpan={7}
+                        style={{ padding: "16px", border: "1px solid #ddd" }}
+                      >
+                        <div style={{ display: "grid", gap: "14px" }}>
+                          <div>
+                            <strong>Customer:</strong>{" "}
+                            {order.user?.username || "N/A"} <br />
+                            <strong>Email:</strong> {order.user?.email || "N/A"}{" "}
+                            <br />
+                            <strong>Phone:</strong>{" "}
+                            {order.user?.phonenumber || "N/A"}
+                          </div>
+                          <div>
+                            <strong>Shipping Address:</strong>
+                            <div
+                              style={{ marginTop: "6px", paddingLeft: "10px" }}
+                            >
+                              <div>
+                                {order.shippingAddress?.street || "N/A"}
+                              </div>
+                              <div>
+                                {order.shippingAddress?.city || ""},{" "}
+                                {order.shippingAddress?.postalcode || ""}
+                              </div>
+                              <div>{order.shippingAddress?.country || ""}</div>
+                              <div>
+                                {order.shippingAddress?.phonenumber || ""}
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <strong>Items:</strong>
+                            <div style={{ marginTop: "8px" }}>
+                              {order.items?.map((item, idx) => (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    padding: "10px",
+                                    border: "1px solid #ddd",
+                                    borderRadius: "8px",
+                                    marginBottom: "8px",
+                                  }}
+                                >
+                                  <div>
+                                    <strong>
+                                      {item.product?.name || "Product"}
+                                    </strong>
+                                  </div>
+                                  <div>Qty: {item.quantity}</div>
+                                  <div>
+                                    Price: $
+                                    {parseFloat(
+                                      item.product?.price || 0,
+                                    ).toFixed(2)}
+                                  </div>
+                                  <div>
+                                    Subtotal: $
+                                    {(
+                                      (item.product?.price || 0) * item.quantity
+                                    ).toFixed(2)}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <strong>Order Total:</strong> $
+                            {parseFloat(order.totalAmount || 0).toFixed(2)}
+                          </div>
+                          <div>
+                            <strong>Payment Status:</strong>{" "}
+                            {order.payment?.status || "Unknown"}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>

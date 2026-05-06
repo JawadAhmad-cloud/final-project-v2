@@ -1,15 +1,24 @@
 import { Link, useNavigate } from "react-router-dom";
 import { FaShoppingCart, FaHeart, FaUser, FaSignOutAlt } from "react-icons/fa";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 const UserNavbar = () => {
   const navigate = useNavigate();
   const { logout, user } = useContext(AuthContext);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleLogout = async () => {
     await logout();
     navigate("/");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/?search=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery("");
+    }
   };
 
   return (
@@ -23,16 +32,21 @@ const UserNavbar = () => {
       </h1>
 
       {/* Search Bar */}
-      <div className="flex items-center w-1/3 gap-2">
+      <form onSubmit={handleSearch} className="flex items-center w-1/3 gap-2">
         <input
           type="text"
           placeholder="Search for products..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-4 py-2 border rounded-l-md outline-none"
         />
-        <button className="px-4 py-2 bg-purple-600 text-white rounded-r-md">
+        <button
+          type="submit"
+          className="px-4 py-2 bg-purple-600 text-white rounded-r-md"
+        >
           Search
         </button>
-      </div>
+      </form>
 
       {/* Right Side Icons */}
       <div className="flex items-center gap-6">
@@ -54,6 +68,15 @@ const UserNavbar = () => {
             >
               <FaHeart className="text-red-600 text-2xl" />
               <span>Favorites</span>
+            </Link>
+
+            {/* Orders */}
+            <Link
+              to="/user/orders"
+              className="flex items-center gap-1 cursor-pointer"
+            >
+              📦
+              <span>Orders</span>
             </Link>
 
             {/* Profile */}

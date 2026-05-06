@@ -18,12 +18,12 @@ const AdminRoutes = ({ onLogout }) => {
   return (
     <AdminLayout onLogout={onLogout}>
       <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/shops" element={<ShopManagement />} />
-        <Route path="/management" element={<AdminManagement />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="shops" element={<ShopManagement />} />
+        <Route path="management" element={<AdminManagement />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Routes>
     </AdminLayout>
   );

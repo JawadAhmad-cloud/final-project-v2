@@ -5,6 +5,8 @@ import Favorites from "../pages/user/Favorites";
 import UserProfile from "../pages/user/UserProfile";
 import ProtectedRoute from "../components/ProtectedRoute";
 import ProductDetailspage from "../pages/user/ProductDetailspage";
+import Orders from "../pages/user/Orders";
+import Checkout from "../pages/user/Checkout";
 
 const UserRoutes = () => {
   return (
@@ -18,9 +20,9 @@ const UserRoutes = () => {
       >
         <Route path="cart" element={<Cart />} />
         <Route path="favorites" element={<Favorites />} />
-            {/* producut details page route */}
-            <Route path="product/:id" element={<ProductDetailspage/>}/>
-        {/* profile page inside user scope */}
+        <Route path="product/:id" element={<ProductDetailspage />} />
+        <Route path="orders" element={<Orders />} />
+        <Route path="checkout/:orderId?" element={<Checkout />} />
         <Route path="profile" element={<UserProfile />} />
       </Route>
     </Routes>
