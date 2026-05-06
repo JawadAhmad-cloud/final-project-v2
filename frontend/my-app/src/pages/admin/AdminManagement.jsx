@@ -14,13 +14,23 @@ export default function AdminManagement() {
   });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [viewMode, setViewMode] = useState("admins");
+  const [users, setUsers] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [userLoading, setUserLoading] = useState(false);
+  const [sellerLoading, setSellerLoading] = useState(false);
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
   const token = user?.token || null;
 
   useEffect(() => {
     fetchAdmins();
-  }, [page]);
+    if (viewMode === "users") {
+      fetchUsers();
+    } else if (viewMode === "sellers") {
+      fetchSellers();
+    }
+  }, [page, viewMode]);
 
   const fetchAdmins = async () => {
     try {
@@ -41,6 +51,44 @@ export default function AdminManagement() {
       console.error("Error fetching admins:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      setUserLoading(true);
+      const response = await fetch(
+        `http://localhost:5000/api/admin/management/all-users?page=1&limit=100`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
+        },
+      );
+      const data = await response.json();
+      setUsers(data?.data?.users || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  const fetchSellers = async () => {
+    try {
+      setSellerLoading(true);
+      const response = await fetch(
+        `http://localhost:5000/api/admin/management/all-sellers?page=1&limit=100`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
+        },
+      );
+      const data = await response.json();
+      setSellers(data?.data?.sellers || []);
+    } catch (error) {
+      console.error("Error fetching sellers:", error);
+    } finally {
+      setSellerLoading(false);
     }
   };
 
@@ -108,39 +156,238 @@ export default function AdminManagement() {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/admin/management/delete-user/${userId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
+        },
+      );
+
+      if (response.ok) {
+        fetchUsers();
+      } else {
+        const data = await response.json();
+        alert(data?.message || "Failed to delete user");
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("An error occurred while deleting the user.");
+    }
+  };
+
+  const handleDeleteSeller = async (sellerId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this seller and their shop?",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/admin/management/delete-seller/${sellerId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
+        },
+      );
+
+      if (response.ok) {
+        fetchSellers();
+      } else {
+        const data = await response.json();
+        alert(data?.message || "Failed to delete seller");
+      }
+    } catch (error) {
+      console.error("Error deleting seller:", error);
+      alert("An error occurred while deleting the seller.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Admin Management</h1>
-          <p className="text-gray-600 mt-1">Manage administrator accounts</p>
+          <p className="text-gray-600 mt-1">
+            {viewMode === "admins"
+              ? "Manage administrator accounts"
+              : viewMode === "users"
+                ? "Manage regular user accounts"
+                : "Manage seller accounts and shops"}
+          </p>
         </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={fetchAdmins}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-          >
-            <FaSync /> Refresh
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-          >
-            <FaPlus /> Add Admin
-          </button>
+        <div className="flex flex-col gap-3 md:items-center md:flex-row md:justify-between">
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setViewMode("admins");
+                setPage(1);
+              }}
+              className={`px-4 py-2 rounded-lg transition ${
+                viewMode === "admins"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Admins
+            </button>
+            <button
+              onClick={() => setViewMode("users")}
+              className={`px-4 py-2 rounded-lg transition ${
+                viewMode === "users"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Users
+            </button>
+            <button
+              onClick={() => setViewMode("sellers")}
+              className={`px-4 py-2 rounded-lg transition ${
+                viewMode === "sellers"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Sellers
+            </button>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => {
+                if (viewMode === "admins") fetchAdmins();
+                else if (viewMode === "users") fetchUsers();
+                else if (viewMode === "sellers") fetchSellers();
+              }}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+            >
+              <FaSync /> Refresh
+            </button>
+            {viewMode === "admins" && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                <FaPlus /> Add Admin
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Admins Table */}
+      {/* Management Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-            <p className="mt-4 text-gray-600">Loading admins...</p>
-          </div>
-        ) : admins.length > 0 ? (
-          <>
+        {viewMode === "admins" ? (
+          loading ? (
+            <div className="p-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              <p className="mt-4 text-gray-600">Loading admins...</p>
+            </div>
+          ) : admins.length > 0 ? (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                        Username
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                        Created
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {admins.map((admin) => (
+                      <tr key={admin._id} className="border-b hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-2">
+                            <FaUser className="text-indigo-600" />
+                            <p className="font-medium text-gray-900">
+                              {admin.username}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {admin.email}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
+                            {admin.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {new Date(admin.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleRemoveAdmin(admin._id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          >
+                            <FaTrash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="px-6 py-4 border-t flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  Page {page} of {totalPages}
+                </p>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setPage(Math.max(1, page - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setPage(Math.min(totalPages, page + 1))}
+                    disabled={page === totalPages}
+                    className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="p-8 text-center">
+              <p className="text-gray-600">No admins found</p>
+            </div>
+          )
+        ) : viewMode === "users" ? (
+          userLoading ? (
+            <div className="p-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              <p className="mt-4 text-gray-600">Loading users...</p>
+            </div>
+          ) : users.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b">
@@ -152,10 +399,7 @@ export default function AdminManagement() {
                       Email
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Role
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                      Created
+                      Joined
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                       Actions
@@ -163,30 +407,28 @@ export default function AdminManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {admins.map((admin) => (
-                    <tr key={admin._id} className="border-b hover:bg-gray-50">
+                  {users.map((userItem) => (
+                    <tr
+                      key={userItem._id}
+                      className="border-b hover:bg-gray-50"
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
                           <FaUser className="text-indigo-600" />
                           <p className="font-medium text-gray-900">
-                            {admin.username}
+                            {userItem.username}
                           </p>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {admin.email}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
-                          {admin.role}
-                        </span>
+                        {userItem.email}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(admin.createdAt).toLocaleDateString()}
+                        {new Date(userItem.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => handleRemoveAdmin(admin._id)}
+                          onClick={() => handleDeleteUser(userItem._id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                         >
                           <FaTrash />
@@ -197,33 +439,76 @@ export default function AdminManagement() {
                 </tbody>
               </table>
             </div>
-
-            {/* Pagination */}
-            <div className="px-6 py-4 border-t flex items-center justify-between">
-              <p className="text-sm text-gray-600">
-                Page {page} of {totalPages}
-              </p>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                  className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
+          ) : (
+            <div className="p-8 text-center">
+              <p className="text-gray-600">No users found</p>
             </div>
-          </>
+          )
+        ) : sellerLoading ? (
+          <div className="p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <p className="mt-4 text-gray-600">Loading sellers...</p>
+          </div>
+        ) : sellers.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                    Seller
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                    Shop
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sellers.map((seller) => (
+                  <tr key={seller._id} className="border-b hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <FaUser className="text-indigo-600" />
+                        <p className="font-medium text-gray-900">
+                          {seller.username}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {seller.email}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {seller.shop?.shopname || "No shop"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
+                        {seller.shop?.isverified || "Unknown"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleDeleteSeller(seller._id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <div className="p-8 text-center">
-            <p className="text-gray-600">No admins found</p>
+            <p className="text-gray-600">No sellers found</p>
           </div>
         )}
       </div>

@@ -77,6 +77,9 @@ async function createShop(req, res) {
 
     await newShop.save();
 
+    // Link shop to seller user record so admin listings can populate it
+    await userModel.findByIdAndUpdate(userId, { shop: newShop._id });
+
     res.status(201).json({
       success: true,
       data: {

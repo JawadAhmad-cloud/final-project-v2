@@ -3,6 +3,8 @@ const adminManagementController = require("../controller/adminmanagement.control
 const {
   addNewAdminValidation,
   removeAdminValidation,
+  deleteUserValidation,
+  deleteSellerValidation,
 } = require("../services/adminmanagement.validation");
 
 const routes = express.Router();
@@ -22,6 +24,22 @@ routes.post(
   addNewAdminValidation,
   adminManagementController.addNewAdmin,
 );
+
+/**
+ * GET /all-users
+ * @description Get all regular users with pagination
+ * @returns {Object} {success: Boolean, data: Object, message: String}
+ * @middleware Authentication required, Role: admin
+ */
+routes.get("/all-users", adminManagementController.getAllUsers);
+
+/**
+ * GET /all-sellers
+ * @description Get all sellers with pagination
+ * @returns {Object} {success: Boolean, data: Object, message: String}
+ * @middleware Authentication required, Role: admin
+ */
+routes.get("/all-sellers", adminManagementController.getAllSellers);
 
 /**
  * GET /all-admins
@@ -46,6 +64,32 @@ routes.delete(
   "/remove-admin/:adminIdToRemove",
   removeAdminValidation,
   adminManagementController.removeAdmin,
+);
+
+/**
+ * DELETE /delete-user/:userId
+ * @description Delete a regular user account
+ * @param {String} req.params.userId - User ID to delete
+ * @returns {Object} {success: Boolean, data: null, message: String}
+ * @middleware Authentication required, Role: admin
+ */
+routes.delete(
+  "/delete-user/:userId",
+  deleteUserValidation,
+  adminManagementController.deleteUser,
+);
+
+/**
+ * DELETE /delete-seller/:sellerId
+ * @description Delete a seller account and related shop data
+ * @param {String} req.params.sellerId - Seller ID to delete
+ * @returns {Object} {success: Boolean, data: null, message: String}
+ * @middleware Authentication required, Role: admin
+ */
+routes.delete(
+  "/delete-seller/:sellerId",
+  deleteSellerValidation,
+  adminManagementController.deleteSeller,
 );
 
 module.exports = routes;

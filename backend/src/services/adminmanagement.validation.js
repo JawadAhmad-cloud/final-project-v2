@@ -47,7 +47,31 @@ const removeAdminValidation = [
     .withMessage("Invalid admin ID"),
 ];
 
+/**
+ * Delete User Validation Rules
+ */
+const deleteUserValidation = [
+  param("userId")
+    .notEmpty()
+    .withMessage("User ID is required")
+    .isMongoId()
+    .withMessage("Invalid user ID"),
+];
+
+/**
+ * Delete Seller Validation Rules
+ */
+const deleteSellerValidation = [
+  param("sellerId")
+    .notEmpty()
+    .withMessage("Seller ID is required")
+    .isMongoId()
+    .withMessage("Invalid seller ID"),
+];
+
 module.exports = {
   addNewAdminValidation,
   removeAdminValidation,
+  deleteUserValidation,
+  deleteSellerValidation,
 };
