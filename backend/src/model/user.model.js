@@ -90,8 +90,17 @@ const userSchema = new mongoose.Schema(
     },
     isverified: {
       type: Boolean,
-      default: true,
+      default: false,
     },
+
+    // Email Verification (OTP)
+    otp: String,
+    otpexpiry: Date,
+    otpAttempts: {
+      type: Number,
+      default: 0,
+    },
+
     verificationtoken: String,
     verificationtokenexpiry: Date,
 

@@ -97,6 +97,47 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("user");
     }
   };
+
+  const verifyEmail = async (formData) => {
+    const res = await fetch("http://localhost:5000/api/auth/verify-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(formData),
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw data;
+    }
+
+    const user = data.data;
+    setUser(user);
+    localStorage.setItem("user", JSON.stringify(user));
+    return data;
+  };
+
+  const resendOTP = async () => {
+    const res = await fetch("http://localhost:5000/api/auth/resend-otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw data;
+    }
+
+    return data;
+  };
+
   const addToCart = (product) => {
     const exists = cart.find((item) => item._id === product._id);
 
@@ -164,6 +205,8 @@ export const AuthProvider = ({ children }) => {
         setUser,
         loading,
         logout,
+        verifyEmail,
+        resendOTP,
         cart,
         addToCart,
         removeFromCart,

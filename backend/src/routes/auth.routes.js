@@ -39,6 +39,24 @@ routes.post("/login", loginValidation, authcontroller.login);
 routes.post("/logout", authcontroller.logout);
 
 /**
+ * POST /verify-email
+ * @description Verify user email with OTP
+ * @param {Object} req.body - Verification data
+ * @param {String} req.body.otp - Required, 6-digit OTP
+ * @returns {Object} {success: Boolean, data: Object, message: String}
+ * @middleware Authentication required
+ */
+routes.post("/verify-email", authMiddleware, authcontroller.verifyEmail);
+
+/**
+ * POST /resend-otp
+ * @description Resend OTP to user's email
+ * @returns {Object} {success: Boolean, data: null, message: String}
+ * @middleware Authentication required
+ */
+routes.post("/resend-otp", authMiddleware, authcontroller.resendOTP);
+
+/**
  * POST /set-role
  * @description Set user role after registration (user or seller)
  * @param {Object} req.body - Role selection data

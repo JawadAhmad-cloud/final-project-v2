@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const { blacklistToken } = require("../services/tokenBlacklist");
+const { generateOTP, sendVerificationEmail } = require("../services/email.service");
 
 /**
  * Sign Up Handler
@@ -14,7 +15,7 @@ const { blacklistToken } = require("../services/tokenBlacklist");
  * @param {String} req.body.password - Password (required, min 6 chars)
  * @param {Object} res - Express response object
  * @returns {Object} {success: Boolean, data: Object, message: String}
- * @description Creates a new user account with hashed password
+ * @description Creates a new user account with hashed password and sends OTP to email
  */
 async function signUp(req, res) {
   // Check for validation errors
@@ -47,20 +48,41 @@ async function signUp(req, res) {
     // Hash password
     const hash = await bcrypt.hash(password, 10);
 
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
     // Create new user
     const user = new userModel({
       username: username,
       email: email,
       password: hash,
+      otp: otp,
+      otpexpiry: otpExpiry,
+      isverified: false,
     });
 
     await user.save();
 
-    // Generate JWT token (role will be set later)
+    // Send verification email
+    try {
+      await sendVerificationEmail(email, otp, username);
+    } catch (emailError) {
+      console.error("Email sending error:", emailError);
+      // Delete the user if email cannot be sent
+      await userModel.findByIdAndDelete(user._id);
+      return res.status(500).json({
+        success: false,
+        data: null,
+        message: "Failed to send verification email. Please try again.",
+      });
+    }
+
+    // Generate temporary JWT token (without role)
     const token = jwt.sign(
-      { id: user._id, role: null },
+      { id: user._id, role: null, verified: false },
       process.env.SECRET_KEY,
-      { expiresIn: "1d" },
+      { expiresIn: "15m" }, // Short expiry for unverified users
     );
 
     // Set token in cookie
@@ -77,9 +99,9 @@ async function signUp(req, res) {
         username: user.username,
         email: user.email,
         token: token,
-        roleRequired: true,
+        verificationRequired: true,
       },
-      message: "User created successfully. Please select a role.",
+      message: "User registered successfully. Please verify your email with the OTP sent.",
     });
 
   } catch (error) {
@@ -201,6 +223,214 @@ async function logout(req, res) {
     });
   } catch (error) {
     console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      data: null,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+}
+
+/**
+ * Verify Email OTP Handler
+ * @async
+ * @param {Object} req - Express request object
+ * @param {String} req.user.id - User ID from token (middleware)
+ * @param {Object} req.body - Request body
+ * @param {String} req.body.otp - One-time password
+ * @param {Object} res - Express response object
+ * @returns {Object} {success: Boolean, data: Object, message: String}
+ * @description Verifies user's email with OTP
+ */
+async function verifyEmail(req, res) {
+  const { otp } = req.body;
+  const userId = req.user?.id;
+
+  // Validate input
+  if (!otp) {
+    return res.status(400).json({
+      success: false,
+      data: null,
+      message: "OTP is required",
+    });
+  }
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      data: null,
+      message: "User not authenticated",
+    });
+  }
+
+  try {
+    // Find user by ID
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: "User not found",
+      });
+    }
+
+    // Check if user is already verified
+    if (user.isverified) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: "User is already verified",
+      });
+    }
+
+    // Check if OTP has expired
+    if (!user.otpexpiry || new Date() > user.otpexpiry) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: "OTP has expired. Please request a new one.",
+      });
+    }
+
+    // Check OTP attempts
+    if (user.otpAttempts >= 5) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: "Maximum OTP attempts exceeded. Please request a new OTP.",
+      });
+    }
+
+    // Verify OTP
+    if (user.otp !== otp) {
+      // Increment OTP attempts
+      user.otpAttempts = (user.otpAttempts || 0) + 1;
+      await user.save();
+
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: `Invalid OTP. Attempts remaining: ${5 - user.otpAttempts}`,
+      });
+    }
+
+    // OTP is correct - mark email as verified
+    user.isverified = true;
+    user.otp = null;
+    user.otpexpiry = null;
+    user.otpAttempts = 0;
+    await user.save();
+
+    // Generate new JWT token with verified status
+    const token = jwt.sign(
+      { id: user._id, role: null, verified: true },
+      process.env.SECRET_KEY,
+      { expiresIn: "1d" },
+    );
+
+    // Update cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        token: token,
+        roleRequired: true,
+      },
+      message: "Email verified successfully. Please select a role.",
+    });
+
+  } catch (error) {
+    console.error("Email verification error:", error);
+    res.status(500).json({
+      success: false,
+      data: null,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+}
+
+/**
+ * Resend OTP Handler
+ * @async
+ * @param {Object} req - Express request object
+ * @param {String} req.user.id - User ID from token (middleware)
+ * @param {Object} res - Express response object
+ * @returns {Object} {success: Boolean, data: null, message: String}
+ * @description Resends OTP to user's email
+ */
+async function resendOTP(req, res) {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      data: null,
+      message: "User not authenticated",
+    });
+  }
+
+  try {
+    // Find user by ID
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: "User not found",
+      });
+    }
+
+    // Check if already verified
+    if (user.isverified) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: "User is already verified",
+      });
+    }
+
+    // Generate new OTP
+    const newOtp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
+    // Update user with new OTP
+    user.otp = newOtp;
+    user.otpexpiry = otpExpiry;
+    user.otpAttempts = 0; // Reset attempts
+    await user.save();
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(user.email, newOtp, user.username);
+    } catch (emailError) {
+      console.error("Email sending error:", emailError);
+      return res.status(500).json({
+        success: false,
+        data: null,
+        message: "Failed to send OTP email",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: null,
+      message: "OTP sent successfully to your email",
+    });
+
+  } catch (error) {
+    console.error("Resend OTP error:", error);
     res.status(500).json({
       success: false,
       data: null,
@@ -390,4 +620,4 @@ async function adminLogin(req, res) {
   }
 }
 
-module.exports = { signUp, login, logout, setRole, adminLogin };
+module.exports = { signUp, login, logout, setRole, adminLogin, verifyEmail, resendOTP };

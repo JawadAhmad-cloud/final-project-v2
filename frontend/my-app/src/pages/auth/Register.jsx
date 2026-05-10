@@ -30,8 +30,8 @@ function Register() {
     try {
       const res = await register(form);
 
-      if (res?.data?.roleRequired) {
-        navigate("/role"); // correct
+      if (res?.data?.verificationRequired) {
+        navigate("/verify-email"); // Navigate to verify email page
       }
     } catch (error) {
       console.error("Error:", error);

@@ -10,6 +10,7 @@ import AuthPage from "../pages/auth/AuthPage";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ChooseRole from "../pages/auth/ChooseRole";
+import VerifyEmail from "../pages/auth/VerifyEmail";
 import UserRoutes from "./UserRoutes";
 
 // import { useContext } from "react";
@@ -44,6 +45,7 @@ const AppRoutes = () => {
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/role" element={<ChooseRole />} />
       <Route path="/profile-complete" element={<CompleteProfile />} />
       {/* Admin Routes */}
