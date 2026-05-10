@@ -1,4 +1,4 @@
-const ImageKit = require("imagekit");
+const { ImageKit, toFile } = require("@imagekit/nodejs");
 
 /**
  * ImageKit Product Service
@@ -13,6 +13,60 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
 });
 
+function resolveUploadFileName(fileInput, defaultFileName) {
+  if (!fileInput) {
+    return defaultFileName;
+  }
+
+  if (typeof fileInput === "string") {
+    return defaultFileName;
+  }
+
+  if (typeof fileInput === "object") {
+    return (
+      fileInput.originalName ||
+      fileInput.originalname ||
+      fileInput.name ||
+      fileInput.fileName ||
+      defaultFileName
+    );
+  }
+
+  return defaultFileName;
+}
+
+async function prepareUploadFile(fileContent, defaultFileName) {
+  if (!fileContent) {
+    return fileContent;
+  }
+
+  const fileName = resolveUploadFileName(fileContent, defaultFileName);
+
+  if (Buffer.isBuffer(fileContent)) {
+    return await toFile(fileContent, fileName);
+  }
+
+  if (typeof fileContent === "object" && fileContent !== null) {
+    if (Buffer.isBuffer(fileContent.buffer)) {
+      return await toFile(fileContent.buffer, fileName);
+    }
+
+    if (fileContent instanceof Uint8Array) {
+      return await toFile(fileContent, fileName);
+    }
+  }
+
+  if (typeof fileContent === "string") {
+    const dataUriMatch = fileContent.match(/^data:.*;base64,(.*)$/);
+    if (dataUriMatch) {
+      const decoded = Buffer.from(dataUriMatch[1], "base64");
+      return await toFile(decoded, fileName);
+    }
+  }
+
+  return fileContent;
+}
+
 /**
  * Ensure Product Folder Exists
  * @description Creates /product folder in ImageKit if it doesn't exist
@@ -20,31 +74,19 @@ const imagekit = new ImageKit({
  */
 async function ensureProductFolder() {
   try {
-    // List files to check if /product folder exists
-    const files = await imagekit.listFiles({
-      path: "/product",
-      limit: 1,
+    const folderResponse = await imagekit.folders.create({
+      folderName: "product",
+      parentFolderPath: "/",
     });
 
-    console.log("Product folder exists");
-    return { success: true, folderExists: true };
+    console.log("Product folder created successfully");
+    return { success: true, folderCreated: true };
   } catch (error) {
-    // Folder doesn't exist, create it
-    try {
-      const folderResponse = await imagekit.createFolder({
-        folderName: "product",
-        parentFolderPath: "/",
-      });
-
-      console.log("Product folder created successfully");
-      return { success: true, folderCreated: true };
-    } catch (createError) {
-      console.log(
-        "Product folder may already exist or error creating:",
-        createError.message,
-      );
-      return { success: true }; // Continue even if folder exists
-    }
+    console.log(
+      "Product folder may already exist or error creating:",
+      error.message,
+    );
+    return { success: true }; // Continue even if folder exists or cannot be created
   }
 }
 
@@ -75,10 +117,11 @@ async function uploadProductImage(fileContent, productId, imageIndex = 1) {
     // Generate unique filename
     const timestamp = Date.now();
     const uniqueFileName = `product_${productId}_image${imageIndex}_${timestamp}.jpg`;
+    const uploadFile = await prepareUploadFile(fileContent, uniqueFileName);
 
     // Upload to ImageKit
-    const response = await imagekit.upload({
-      file: fileContent,
+    const response = await imagekit.files.upload({
+      file: uploadFile,
       fileName: uniqueFileName,
       folder: "/product",
       useUniqueFileName: false, // Use our custom name
@@ -88,11 +131,6 @@ async function uploadProductImage(fileContent, productId, imageIndex = 1) {
         `productId_${productId}`,
         `image_${imageIndex}`,
       ],
-      customMetadata: {
-        productId: productId,
-        imageIndex: imageIndex,
-        type: "product",
-      },
     });
 
     return {
@@ -182,10 +220,11 @@ async function uploadProductImages(fileArray, productId) {
       try {
         const timestamp = Date.now();
         const uniqueFileName = `product_${productId}_image${imageIndex}_${timestamp}.jpg`;
+        const uploadFile = await prepareUploadFile(fileContent, uniqueFileName);
 
         // Upload to ImageKit
-        const response = await imagekit.upload({
-          file: fileContent,
+        const response = await imagekit.files.upload({
+          file: uploadFile,
           fileName: uniqueFileName,
           folder: "/product",
           useUniqueFileName: false,
@@ -195,11 +234,6 @@ async function uploadProductImages(fileArray, productId) {
             `productId_${productId}`,
             `image_${imageIndex}`,
           ],
-          customMetadata: {
-            productId: productId,
-            imageIndex: imageIndex,
-            type: "product",
-          },
         });
 
         uploadedImages.push({
@@ -263,7 +297,7 @@ async function uploadProductImages(fileArray, productId) {
  */
 async function deleteProductImage(fileId, productId = null) {
   try {
-    await imagekit.deleteFile(fileId);
+    await imagekit.files.delete(fileId);
 
     return {
       success: true,
@@ -309,7 +343,7 @@ async function deleteProductImages(fileIds, productId = null) {
 
     for (const fileId of fileIds) {
       try {
-        await imagekit.deleteFile(fileId);
+        await imagekit.files.delete(fileId);
         deletedCount++;
         console.log(`✓ Image ${fileId} deleted`);
       } catch (error) {
@@ -466,10 +500,11 @@ async function updateProductImages(imageUpdates, productId) {
       try {
         const timestamp = Date.now();
         const uniqueFileName = `product_${productId}_image${imageIndex}_${timestamp}.jpg`;
+        const uploadFile = await prepareUploadFile(fileContent, uniqueFileName);
 
         // Upload new image
-        const response = await imagekit.upload({
-          file: fileContent,
+        const response = await imagekit.files.upload({
+          file: uploadFile,
           fileName: uniqueFileName,
           folder: "/product",
           useUniqueFileName: false,
@@ -479,11 +514,6 @@ async function updateProductImages(imageUpdates, productId) {
             `productId_${productId}`,
             `image_${imageIndex}`,
           ],
-          customMetadata: {
-            productId: productId,
-            imageIndex: imageIndex,
-            type: "product",
-          },
         });
 
         updatedImages.push({
@@ -500,7 +530,7 @@ async function updateProductImages(imageUpdates, productId) {
         // Delete old image if provided (don't fail if it fails)
         if (oldFileId) {
           try {
-            await imagekit.deleteFile(oldFileId);
+            await imagekit.files.delete(oldFileId);
             console.log(`✓ Image ${imageIndex} updated, old file deleted`);
           } catch (deleteError) {
             console.log(
@@ -558,7 +588,7 @@ async function updateProductImages(imageUpdates, productId) {
  */
 async function getProductImages(productId) {
   try {
-    const files = await imagekit.listFiles({
+    const files = await imagekit.files.list({
       path: "/product",
       searchQuery: `name like "%${productId}%"`,
       limit: 100,

@@ -30,7 +30,7 @@ async function addProduct(req, res) {
   }
 
   const userId = req.user.id;
-  const { name, description, price, category, totalStock } = req.body;
+  const { name, description, price, category, totalStock, images } = req.body;
 
   try {
     // Get seller's shop
@@ -64,6 +64,12 @@ async function addProduct(req, res) {
       reservedStock: 0,
     });
 
+    if (images && typeof images === "object") {
+      if (images.main) newProduct.images.main = images.main;
+      if (images.side1) newProduct.images.side1 = images.side1;
+      if (images.side2) newProduct.images.side2 = images.side2;
+    }
+
     await newProduct.save();
 
     // Add product to shop's products array
@@ -86,6 +92,99 @@ async function addProduct(req, res) {
     });
   } catch (error) {
     console.error("Add product error:", error);
+    res.status(500).json({
+      success: false,
+      data: null,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+}
+
+/**
+ * Upload Product Images Handler
+ * @async
+ * @param {Object} req - Express request object
+ * @param {String} req.user.id - User ID from token (middleware - seller only)
+ * @param {Array<Object>} req.files - Uploaded image files
+ * @param {Object} res - Express response object
+ * @returns {Object} {success: Boolean, data: Object, message: String}
+ */
+async function uploadProductImages(req, res) {
+  const userId = req.user.id;
+  const files = req.files;
+
+  if (!Array.isArray(files) || files.length === 0) {
+    return res.status(400).json({
+      success: false,
+      data: null,
+      message: "Please upload at least one product image",
+    });
+  }
+
+  try {
+    const shop = await shopModel.findOne({ seller: userId });
+
+    if (!shop) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: "Shop not found. Please create a shop first.",
+      });
+    }
+
+    if (shop.isverified !== "verified") {
+      return res.status(403).json({
+        success: false,
+        data: null,
+        message: "Your shop must be verified before uploading product images",
+      });
+    }
+
+    const uploadInputs = files.map((file) => ({
+      buffer: file.buffer,
+      originalName: file.originalname,
+    }));
+
+    const imagekitService = require("../services/imagekit.product.service");
+    const uploadResult = await imagekitService.uploadProductImages(
+      uploadInputs,
+      shop._id.toString(),
+    );
+
+    if (!uploadResult.success) {
+      return res.status(500).json({
+        success: false,
+        data: uploadResult.data,
+        message: uploadResult.message || "Failed to upload product images",
+        error: uploadResult.error,
+      });
+    }
+
+    const imageEntries = uploadResult.data.uploadedImages.reduce(
+      (acc, item) => {
+        const key =
+          item.imageIndex === 1
+            ? "main"
+            : item.imageIndex === 2
+              ? "side1"
+              : "side2";
+        acc[key] = item.url;
+        return acc;
+      },
+      {},
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        uploadedImages: uploadResult.data.uploadedImages,
+        imageUrls: imageEntries,
+      },
+      message: uploadResult.message,
+    });
+  } catch (error) {
+    console.error("Upload product images error:", error);
     res.status(500).json({
       success: false,
       data: null,
@@ -505,6 +604,7 @@ async function toggleProductStatus(req, res) {
 
 module.exports = {
   addProduct,
+  uploadProductImages,
   getSellerProducts,
   updateProduct,
   deleteProduct,

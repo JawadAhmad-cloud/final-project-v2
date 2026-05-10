@@ -7,6 +7,7 @@ function ProductDetailspage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [message, setMessage] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [userOrders, setUserOrders] = useState([]);
@@ -31,7 +32,12 @@ function ProductDetailspage() {
       _id: product._id,
       name: product.name,
       price: product.price,
-      image: product.images?.main,
+      image:
+        product.images?.main ||
+        product.image ||
+        product.images?.side1 ||
+        product.images?.side2 ||
+        "/Images/m4.png",
       seller: product.seller?.shopname,
     });
     setMessage("Item added to cart!");
@@ -151,6 +157,29 @@ function ProductDetailspage() {
     );
   };
 
+  const imageOptions = [
+    product?.images?.main,
+    product?.images?.side1,
+    product?.images?.side2,
+    product?.image,
+  ].filter(Boolean);
+
+  useEffect(() => {
+    if (imageOptions.length > 0) {
+      setSelectedImage(imageOptions[0]);
+    }
+  }, [product?.images, product?.image]);
+
+  const productImageUrl =
+    selectedImage ||
+    product?.images?.main ||
+    product?.image ||
+    product?.images?.side1 ||
+    product?.images?.side2 ||
+    "/Images/m4.png";
+
+  const productThumbnails = imageOptions.slice(0, 4);
+
   const submitReview = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -228,27 +257,31 @@ function ProductDetailspage() {
         {/* PRODUCT IMAGES */}
         <div>
           <img
-            src={product.images?.main}
+            src={productImageUrl}
             alt={product.name}
             className="w-full rounded-lg border"
           />
 
           <div className="flex gap-3 mt-4">
-            {product.images?.side1 && (
-              <img
-                src={product.images.side1}
-                alt=""
-                className="w-20 border rounded cursor-pointer"
-              />
-            )}
-
-            {product.images?.side2 && (
-              <img
-                src={product.images.side2}
-                alt=""
-                className="w-20 border rounded cursor-pointer"
-              />
-            )}
+            {productThumbnails.map((thumbnail, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setSelectedImage(thumbnail)}
+                className={`rounded overflow-hidden border ${
+                  selectedImage === thumbnail
+                    ? "border-indigo-600"
+                    : "border-gray-300"
+                }`}
+                style={{ width: 80, height: 80, padding: 0 }}
+              >
+                <img
+                  src={thumbnail}
+                  alt={`${product.name} thumbnail ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
           </div>
         </div>
 

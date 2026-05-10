@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const Favorites = () => {
@@ -35,7 +36,7 @@ const Favorites = () => {
         {
           method: "DELETE",
           credentials: "include",
-        }
+        },
       );
 
       const data = await res.json();
@@ -43,9 +44,7 @@ const Favorites = () => {
       if (!data.success) throw new Error(data.message);
 
       // update UI
-      setFavorites((prev) =>
-        prev.filter((item) => item._id !== productId)
-      );
+      setFavorites((prev) => prev.filter((item) => item._id !== productId));
 
       toast.success("Removed from favorites 💔");
     } catch (err) {
@@ -56,13 +55,10 @@ const Favorites = () => {
   // ✅ Clear all
   const clearFavorites = async () => {
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/favourite/clear",
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const res = await fetch("http://localhost:5000/api/favourite/clear", {
+        method: "DELETE",
+        credentials: "include",
+      });
 
       const data = await res.json();
 
@@ -102,7 +98,6 @@ const Favorites = () => {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">My Favorites ❤️</h1>
@@ -117,47 +112,59 @@ const Favorites = () => {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {favorites.map((product) => (
-          <div
-            key={product._id}
-            className="border rounded-xl p-4 shadow hover:shadow-lg transition"
-          >
-            {/* Image */}
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-40 object-cover rounded-lg"
-            />
+        {favorites.map((product) => {
+          const imageUrl =
+            product.images?.main ||
+            product.image ||
+            product.images?.side1 ||
+            product.images?.side2 ||
+            "/Images/m4.png";
 
-            {/* Info */}
-            <h2 className="text-lg font-semibold mt-3">
-              {product.name}
-            </h2>
+          return (
+            <div
+              key={product._id || product.id}
+              className="border rounded-xl p-4 shadow hover:shadow-lg transition"
+            >
+              {/* Image */}
+              <Link to={`/user/product/${product._id || product.id}`}>
+                <img
+                  src={imageUrl}
+                  alt={product.name}
+                  className="w-full h-40 object-cover rounded-lg"
+                />
+              </Link>
 
-            <p className="text-gray-600">${product.price}</p>
+              {/* Info */}
+              <h2 className="text-lg font-semibold mt-3">{product.name}</h2>
 
-            {/* Buttons */}
-            <div className="flex gap-2 mt-4">
-              
-              {/* Order Now */}
-              <button
-                className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600"
-                onClick={() => alert("Order flow here")}
-              >
-                Order Now
-              </button>
+              <p className="text-gray-600">${product.price}</p>
 
-              {/* Remove */}
-              <button
-                onClick={() => removeFromFav(product._id)}
-                className="flex-1 bg-gray-200 text-black py-2 rounded-lg hover:bg-gray-300"
-              >
-                Remove
-              </button>
+              {/* Buttons */}
+              <div className="flex gap-2 mt-4">
+                <Link
+                  to={`/user/product/${product._id || product.id}`}
+                  className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-center hover:bg-blue-600"
+                >
+                  View
+                </Link>
 
+                <button
+                  className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600"
+                  onClick={() => alert("Order flow here")}
+                >
+                  Order Now
+                </button>
+
+                <button
+                  onClick={() => removeFromFav(product._id || product.id)}
+                  className="flex-1 bg-gray-200 text-black py-2 rounded-lg hover:bg-gray-300"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

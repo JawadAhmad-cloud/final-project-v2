@@ -31,7 +31,7 @@ routes.get("/", async (req, res) => {
     const skip = (page - 1) * limit;
     const products = await Product.find(query)
       .select(
-        "_id name description price category totalStock seller rating createdAt",
+        "_id name description price category totalStock seller rating createdAt images",
       )
       .populate("seller", "shopname")
       .skip(skip)

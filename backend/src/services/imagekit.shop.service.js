@@ -1,4 +1,4 @@
-const ImageKit = require("imagekit");
+const { ImageKit, toFile } = require("@imagekit/nodejs");
 
 /**
  * ImageKit Shop Service
@@ -12,6 +12,26 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
 });
 
+function getUploadFileContent(fileInput, defaultFileName) {
+  if (!fileInput) {
+    return fileInput;
+  }
+
+  if (Buffer.isBuffer(fileInput)) {
+    return toFile(fileInput, defaultFileName);
+  }
+
+  if (
+    typeof fileInput === "object" &&
+    fileInput !== null &&
+    Buffer.isBuffer(fileInput.buffer)
+  ) {
+    return toFile(fileInput.buffer, fileInput.originalName || defaultFileName);
+  }
+
+  return fileInput;
+}
+
 /**
  * Ensure Shop Folder Exists
  * @description Creates /shop folder in ImageKit if it doesn't exist
@@ -19,31 +39,20 @@ const imagekit = new ImageKit({
  */
 async function ensureShopFolder() {
   try {
-    // List files to check if /shop folder exists
-    const files = await imagekit.listFiles({
-      path: "/shop",
-      limit: 1,
+    // Try to create the folder if it does not exist
+    const folderResponse = await imagekit.folders.create({
+      folderName: "shop",
+      parentFolderPath: "/",
     });
 
-    console.log("Shop folder exists");
-    return { success: true, folderExists: true };
+    console.log("Shop folder created successfully");
+    return { success: true, folderCreated: true };
   } catch (error) {
-    // Folder doesn't exist, create it
-    try {
-      const folderResponse = await imagekit.createFolder({
-        folderName: "shop",
-        parentFolderPath: "/",
-      });
-
-      console.log("Shop folder created successfully");
-      return { success: true, folderCreated: true };
-    } catch (createError) {
-      console.log(
-        "Shop folder may already exist or error creating:",
-        createError.message,
-      );
-      return { success: true }; // Continue even if folder exists
-    }
+    console.log(
+      "Shop folder may already exist or error creating:",
+      error.message,
+    );
+    return { success: true }; // Continue even if folder exists or cannot be created
   }
 }
 
@@ -71,11 +80,12 @@ async function uploadShopLogo(fileContent, fileName, shopId) {
 
     // Generate unique filename with timestamp
     const timestamp = Date.now();
-    const uniqueFileName = `logo_${shopId}_${timestamp}.jpg`;
+    const uniqueFileName = fileName || `logo_${shopId}_${timestamp}.jpg`;
+    const uploadFile = getUploadFileContent(fileContent, uniqueFileName);
 
     // Upload to ImageKit
-    const response = await imagekit.upload({
-      file: fileContent,
+    const response = await imagekit.files.upload({
+      file: uploadFile,
       fileName: uniqueFileName,
       folder: "/shop",
       useUniqueFileName: false, // Use our custom name
@@ -133,11 +143,12 @@ async function uploadShopBanner(fileContent, fileName, shopId) {
 
     // Generate unique filename with timestamp
     const timestamp = Date.now();
-    const uniqueFileName = `banner_${shopId}_${timestamp}.jpg`;
+    const uniqueFileName = fileName || `banner_${shopId}_${timestamp}.jpg`;
+    const uploadFile = getUploadFileContent(fileContent, uniqueFileName);
 
     // Upload to ImageKit
-    const response = await imagekit.upload({
-      file: fileContent,
+    const response = await imagekit.files.upload({
+      file: uploadFile,
       fileName: uniqueFileName,
       folder: "/shop",
       useUniqueFileName: false, // Use our custom name
@@ -299,7 +310,7 @@ async function updateShopBanner(oldFileId, fileContent, shopId) {
  */
 async function deleteShopImage(fileId) {
   try {
-    await imagekit.deleteFile(fileId);
+    await imagekit.files.delete(fileId);
 
     return {
       success: true,

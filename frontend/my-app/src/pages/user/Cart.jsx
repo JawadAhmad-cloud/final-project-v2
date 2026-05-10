@@ -126,7 +126,14 @@ const Cart = () => {
                 />
 
                 <img
-                  src={item.image}
+                  src={
+                    item.image ||
+                    item.images?.main ||
+                    item.images?.side1 ||
+                    item.images?.side2 ||
+                    "/Images/m4.png"
+                  }
+                  alt={item.name}
                   className="w-20 h-20 object-cover rounded"
                 />
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -18,6 +19,14 @@ const Products = () => {
     price: "",
     category: "",
     totalStock: "",
+  });
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [uploadedImages, setUploadedImages] = useState({});
+  const [imageUploadState, setImageUploadState] = useState({
+    uploading: false,
+    uploaded: false,
+    error: null,
+    message: "",
   });
 
   // Fetch products
@@ -89,6 +98,11 @@ const Products = () => {
       return;
     }
 
+    if (!editingProductId && !imageUploadState.uploaded) {
+      alert("Please upload product images before creating the product.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -119,6 +133,7 @@ const Products = () => {
           price: parseFloat(formData.price),
           category: formData.category,
           totalStock: parseInt(formData.totalStock),
+          images: uploadedImages,
         }),
       });
 
@@ -144,12 +159,108 @@ const Products = () => {
         totalStock: "",
       });
       setEditingProductId(null);
+      setUploadedImages({});
+      setSelectedImages([]);
+      setImageUploadState({
+        uploading: false,
+        uploaded: false,
+        error: null,
+        message: "",
+      });
       setShowCreateForm(false);
       fetchProducts(1);
     } catch (err) {
       setError(err.message || "Unable to save product");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageSelection = (event) => {
+    const files = Array.from(event.target.files || []);
+    const selected = files.slice(0, 3);
+    setSelectedImages(selected);
+    setUploadedImages({});
+    setImageUploadState({
+      uploading: false,
+      uploaded: false,
+      error: null,
+      message:
+        selected.length > 0
+          ? selected.length === 3
+            ? "3 images ready to upload"
+            : `${selected.length} image(s) ready to upload`
+          : "",
+    });
+  };
+
+  const handleUploadImages = async () => {
+    if (selectedImages.length === 0) {
+      setImageUploadState({
+        uploading: false,
+        uploaded: false,
+        error: "Please select at least one image to upload.",
+        message: "",
+      });
+      return;
+    }
+
+    setImageUploadState({
+      uploading: true,
+      uploaded: false,
+      error: null,
+      message: "Uploading images...",
+    });
+    setError(null);
+
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const token = user?.token;
+
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      const formData = new FormData();
+      selectedImages.forEach((file) => formData.append("images", file));
+
+      const response = await fetch(
+        "http://localhost:5000/api/seller/products/upload-images",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => null);
+        throw new Error(errBody?.message || "Failed to upload images");
+      }
+
+      const json = await response.json();
+      if (!json.success) {
+        throw new Error(json.message || "Image upload failed");
+      }
+
+      setUploadedImages(json.data.imageUrls || {});
+      setImageUploadState({
+        uploading: false,
+        uploaded: true,
+        error: null,
+        message: "Images uploaded successfully.",
+      });
+    } catch (err) {
+      setImageUploadState({
+        uploading: false,
+        uploaded: false,
+        error: err.message || "Unable to upload images",
+        message: "",
+      });
     }
   };
 
@@ -261,6 +372,14 @@ const Products = () => {
       category: product.category || "",
       totalStock: product.totalStock || product.stock || "",
     });
+    setSelectedImages([]);
+    setUploadedImages({});
+    setImageUploadState({
+      uploading: false,
+      uploaded: false,
+      error: null,
+      message: "",
+    });
     setShowCreateForm(true);
   };
 
@@ -274,6 +393,14 @@ const Products = () => {
       totalStock: "",
     });
     setEditingProductId(null);
+    setSelectedImages([]);
+    setUploadedImages({});
+    setImageUploadState({
+      uploading: false,
+      uploaded: false,
+      error: null,
+      message: "",
+    });
     setShowCreateForm(false);
   };
 
@@ -432,17 +559,126 @@ const Products = () => {
             />
           </div>
 
+          {!editingProductId && (
+            <div
+              style={{
+                marginBottom: "15px",
+                backgroundColor: "#ffffff",
+                border: "1px solid #ddd",
+                padding: "15px",
+                borderRadius: "8px",
+              }}
+            >
+              <label
+                htmlFor="productImages"
+                style={{ display: "block", marginBottom: "8px" }}
+              >
+                Product Images (up to 3):
+              </label>
+              <input
+                id="productImages"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageSelection}
+                style={{ display: "block", marginBottom: "10px" }}
+              />
+
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                {selectedImages.map((file, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      minWidth: "110px",
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      borderRadius: "6px",
+                      backgroundColor: "#fafafa",
+                    }}
+                  >
+                    <strong>Image {index + 1}</strong>
+                    <p style={{ margin: "6px 0 0", fontSize: "12px" }}>
+                      {file.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleUploadImages}
+                disabled={
+                  imageUploadState.uploading || selectedImages.length === 0
+                }
+                style={{
+                  marginTop: "12px",
+                  padding: "10px 16px",
+                  backgroundColor: imageUploadState.uploading
+                    ? "#6c757d"
+                    : "#17a2b8",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: imageUploadState.uploading ? "default" : "pointer",
+                }}
+              >
+                {imageUploadState.uploading
+                  ? "Uploading images..."
+                  : imageUploadState.uploaded
+                    ? "Images uploaded"
+                    : "Upload Images"}
+              </button>
+
+              {imageUploadState.message && (
+                <p style={{ marginTop: "10px", color: "#155724" }}>
+                  {imageUploadState.message}
+                </p>
+              )}
+              {imageUploadState.error && (
+                <p style={{ marginTop: "10px", color: "#721c24" }}>
+                  {imageUploadState.error}
+                </p>
+              )}
+
+              {imageUploadState.uploaded && uploadedImages && (
+                <div style={{ marginTop: "12px" }}>
+                  <p style={{ marginBottom: "8px", fontWeight: "600" }}>
+                    Uploaded image URLs:
+                  </p>
+                  <ul style={{ paddingLeft: "18px", margin: 0 }}>
+                    {Object.entries(uploadedImages).map(([key, url]) => (
+                      <li
+                        key={key}
+                        style={{ marginBottom: "4px", fontSize: "13px" }}
+                      >
+                        <strong>{key}:</strong> {url}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={
+              loading || (!editingProductId && !imageUploadState.uploaded)
+            }
             style={{
               padding: "8px 16px",
               backgroundColor: "#007bff",
               color: "white",
               border: "none",
               borderRadius: "4px",
-              cursor: loading ? "default" : "pointer",
-              opacity: loading ? 0.5 : 1,
+              cursor:
+                loading || (!editingProductId && !imageUploadState.uploaded)
+                  ? "default"
+                  : "pointer",
+              opacity:
+                loading || (!editingProductId && !imageUploadState.uploaded)
+                  ? 0.5
+                  : 1,
             }}
           >
             {loading
@@ -504,6 +740,15 @@ const Products = () => {
                     border: "1px solid #ddd",
                   }}
                 >
+                  Image
+                </th>
+                <th
+                  style={{
+                    padding: "12px",
+                    textAlign: "left",
+                    border: "1px solid #ddd",
+                  }}
+                >
                   Product Name
                 </th>
                 <th
@@ -548,6 +793,24 @@ const Products = () => {
               {products.map((product) => (
                 <tr key={product._id || product.id}>
                   <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    <img
+                      src={
+                        product.images?.main ||
+                        product.image ||
+                        product.images?.side1 ||
+                        product.images?.side2 ||
+                        "/Images/m4.png"
+                      }
+                      alt={product.name}
+                      style={{
+                        width: 60,
+                        height: 60,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                      }}
+                    />
+                  </td>
+                  <td style={{ padding: "12px", border: "1px solid #ddd" }}>
                     {product.name || "N/A"}
                   </td>
                   <td style={{ padding: "12px", border: "1px solid #ddd" }}>
@@ -583,7 +846,25 @@ const Products = () => {
                     </button>
                   </td>
                   <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                    <div style={{ display: "flex", gap: "5px" }}>
+                    <div
+                      style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}
+                    >
+                      <Link
+                        to={`/user/product/${product._id || product.id}`}
+                        style={{
+                          padding: "4px 8px",
+                          backgroundColor: "#17a2b8",
+                          color: "white",
+                          textDecoration: "none",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          display: "inline-block",
+                        }}
+                      >
+                        View
+                      </Link>
                       <button
                         onClick={() => startEdit(product)}
                         style={{

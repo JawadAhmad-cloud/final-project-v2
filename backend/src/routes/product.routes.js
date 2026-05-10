@@ -1,4 +1,5 @@
 const express = require("express");
+const multer = require("multer");
 const productController = require("../controller/product.controller");
 const {
   addProductValidation,
@@ -8,6 +9,7 @@ const {
   toggleProductStatusValidation,
 } = require("../services/product.validation");
 
+const upload = multer({ storage: multer.memoryStorage() });
 const routes = express.Router();
 
 /**
@@ -23,6 +25,19 @@ const routes = express.Router();
  * @middleware Authentication required, Role: seller
  */
 routes.post("/", addProductValidation, productController.addProduct);
+
+/**
+ * POST /upload-images
+ * @description Upload seller product images to ImageKit before product creation
+ * @param {Array<File>} req.files - Up to 3 product image files (main, side1, side2)
+ * @returns {Object} {success: Boolean, data: Object, message: String}
+ * @middleware Authentication required, Role: seller
+ */
+routes.post(
+  "/upload-images",
+  upload.array("images", 3),
+  productController.uploadProductImages,
+);
 
 /**
  * GET /

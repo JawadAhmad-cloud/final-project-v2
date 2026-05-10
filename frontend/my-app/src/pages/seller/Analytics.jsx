@@ -68,6 +68,13 @@ const Analytics = () => {
     fetchAnalytics(period);
   }, [period]);
 
+  const safeNumber = (value) => {
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? numberValue : 0;
+  };
+
+  const formatCurrency = (value) => `$${safeNumber(value).toFixed(2)}`;
+
   const StatCard = ({ title, value, icon, color, unit = "" }) => (
     <div
       style={{
@@ -257,7 +264,7 @@ const Analytics = () => {
         >
           <StatCard
             title="Total Revenue"
-            value={`$${(analytics.totalRevenue || 0).toFixed(2)}`}
+            value={formatCurrency(analytics.totalRevenue)}
             icon="💰"
             color="#10b981"
             unit=""
@@ -271,7 +278,7 @@ const Analytics = () => {
           />
           <StatCard
             title="Average Order Value"
-            value={`$${(analytics.averageOrderValue || 0).toFixed(2)}`}
+            value={formatCurrency(analytics.averageOrderValue)}
             icon="📈"
             color="#f59e0b"
             unit=""
@@ -605,7 +612,7 @@ const Analytics = () => {
                           color: "#10b981",
                         }}
                       >
-                        ${(trend.revenue || 0).toFixed(2)}
+                        {formatCurrency(trend.revenue)}
                       </td>
                       <td
                         style={{
@@ -625,7 +632,7 @@ const Analytics = () => {
                           fontWeight: "600",
                         }}
                       >
-                        ${(trend.averageOrderValue || 0).toFixed(2)}
+                        {formatCurrency(trend.averageOrderValue)}
                       </td>
                     </tr>
                   ))}
