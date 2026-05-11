@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from "react";
+import { useSocket } from "./SocketContext.jsx";
 
 export const AuthContext = createContext();
 
@@ -8,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   );
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { authenticateSeller, fetchInitialOrderCount } = useSocket();
 
   const register = async (formData) => {
     const res = await fetch("http://localhost:5000/api/auth/register", {
@@ -49,6 +51,12 @@ export const AuthProvider = ({ children }) => {
     setUser(user);
     localStorage.setItem("user", JSON.stringify(user));
 
+    // Authenticate seller with socket if role is seller
+    if (user.role === "seller") {
+      setTimeout(() => authenticateSeller(), 1000); // Delay to ensure socket is connected
+      fetchInitialOrderCount(); // Fetch initial count immediately
+    }
+
     return user;
   };
 
@@ -56,11 +64,17 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem("user");
 
     if (storedUser && storedUser !== "undefined") {
-      setUser(JSON.parse(storedUser));
+      const user = JSON.parse(storedUser);
+      setUser(user);
+      // Authenticate seller with socket if role is seller
+      if (user.role === "seller") {
+        setTimeout(() => authenticateSeller(), 1000); // Delay to ensure socket is connected
+        fetchInitialOrderCount(); // Fetch initial count immediately
+      }
     }
 
     setLoading(false);
-  }, []);
+  }, [authenticateSeller]);
 
   const setRoleApi = async (role) => {
     const res = await fetch("http://localhost:5000/api/auth/set-role", {

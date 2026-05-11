@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { AuthContext } from "../../context/AuthContext";
 
 function ProductDetailspage() {
@@ -40,6 +41,7 @@ function ProductDetailspage() {
         "/Images/m4.png",
       seller: product.seller?.shopname,
     });
+    toast.success("Item added to cart!");
     setMessage("Item added to cart!");
     setTimeout(() => setMessage(""), 2000);
   };

@@ -1,10 +1,12 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaShoppingCart } from "react-icons/fa";
+import toast from "react-hot-toast";
 import { AuthContext } from "../context/AuthContext";
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useContext(AuthContext);
+  const [added, setAdded] = useState(false);
   const price = Number(product.price) || 0;
   const discount = Number(product.discount) || 0;
   const discountedPrice = discount
@@ -15,6 +17,9 @@ const ProductCard = ({ product }) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
+    setAdded(true);
+    toast.success(`${product.name} added to cart!`);
+    setTimeout(() => setAdded(false), 1500);
   };
 
   const imageUrl =
@@ -55,7 +60,7 @@ const ProductCard = ({ product }) => {
             className="btn-primary product-card-button flex items-center justify-center gap-2"
           >
             <FaShoppingCart className="text-white" />
-            Add to Cart
+            {added ? "Added" : "Add to Cart"}
           </button>
         </div>
 

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useSocket } from "../context/SocketContext.jsx";
 
 const SellerNavbar = () => {
   const [hasShop, setHasShop] = useState(false);
   const [checkingShop, setCheckingShop] = useState(true);
+  const { newOrderCount, clearNewOrderCount } = useSocket();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -128,8 +130,32 @@ const SellerNavbar = () => {
             ...linkStyle,
             ...(isActive ? activeLinkStyle : {}),
           })}
+          onClick={() => {
+            if (item.path === "/seller/orders") {
+              clearNewOrderCount();
+            }
+          }}
         >
-          {item.label}
+          <span>{item.label}</span>
+          {item.path === "/seller/orders" && newOrderCount > 0 && (
+            <span
+              style={{
+                marginLeft: "8px",
+                minWidth: "22px",
+                padding: "2px 8px",
+                borderRadius: "999px",
+                backgroundColor: "#ef4444",
+                color: "#ffffff",
+                fontSize: "0.82rem",
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {newOrderCount}
+            </span>
+          )}
         </NavLink>
       ))}
     </aside>

@@ -154,9 +154,7 @@ const Orders = () => {
 
   // Delete order
   const deleteOrder = async (orderId) => {
-    if (
-      !window.confirm("Are you sure you want to delete this completed order?")
-    ) {
+    if (!window.confirm("Are you sure you want to delete this order?")) {
       return;
     }
 
@@ -232,11 +230,11 @@ const Orders = () => {
         },
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to ship order");
-      }
-
       const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json.message || "Failed to ship order");
+      }
 
       if (!json.success) {
         throw new Error(json.message || "Ship operation failed");
@@ -258,10 +256,40 @@ const Orders = () => {
   const totalPages = Math.ceil(totalItems / limit);
 
   return (
-    <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
-      <h1>Orders Management</h1>
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: "1200px",
+        margin: "0 auto",
+        backgroundColor: "#f8f9fa",
+        borderRadius: "8px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      }}
+    >
+      <h1
+        style={{
+          color: "#2c3e50",
+          marginBottom: "20px",
+          fontSize: "28px",
+          fontWeight: "bold",
+        }}
+      >
+        Orders Management
+      </h1>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && (
+        <p
+          style={{
+            color: "#e74c3c",
+            backgroundColor: "#faddd7",
+            padding: "10px",
+            borderRadius: "4px",
+            marginBottom: "20px",
+          }}
+        >
+          {error}
+        </p>
+      )}
 
       <div
         style={{
@@ -327,14 +355,23 @@ const Orders = () => {
 
       {!loading && orders.length > 0 && (
         <div>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              backgroundColor: "white",
+              borderRadius: "8px",
+              overflow: "hidden",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+            }}
+          >
             <thead>
-              <tr style={{ backgroundColor: "#f5f5f5" }}>
+              <tr style={{ backgroundColor: "#3498db", color: "white" }}>
                 <th
                   style={{
                     padding: "12px",
                     textAlign: "left",
-                    border: "1px solid #ddd",
+                    border: "none",
                   }}
                 >
                   Order ID
@@ -343,7 +380,7 @@ const Orders = () => {
                   style={{
                     padding: "12px",
                     textAlign: "left",
-                    border: "1px solid #ddd",
+                    border: "none",
                   }}
                 >
                   Customer
@@ -379,7 +416,7 @@ const Orders = () => {
                   style={{
                     padding: "12px",
                     textAlign: "left",
-                    border: "1px solid #ddd",
+                    border: "none",
                   }}
                 >
                   Total Amount
@@ -388,7 +425,7 @@ const Orders = () => {
                   style={{
                     padding: "12px",
                     textAlign: "left",
-                    border: "1px solid #ddd",
+                    border: "none",
                   }}
                 >
                   Actions
@@ -398,11 +435,16 @@ const Orders = () => {
             <tbody>
               {orders.map((order) => (
                 <React.Fragment key={order._id || order.id}>
-                  <tr>
-                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                  <tr
+                    style={{
+                      backgroundColor:
+                        orders.indexOf(order) % 2 === 0 ? "#f8f9fa" : "white",
+                    }}
+                  >
+                    <td style={{ padding: "12px", border: "none" }}>
                       {order._id || order.id || "N/A"}
                     </td>
-                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    <td style={{ padding: "12px", border: "none" }}>
                       {order.user?.username || "N/A"}
                     </td>
                     <td style={{ padding: "12px", border: "1px solid #ddd" }}>
@@ -425,7 +467,7 @@ const Orders = () => {
                         {order.status || "pending"}
                       </span>
                     </td>
-                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    <td style={{ padding: "12px", border: "none" }}>
                       <span
                         style={{
                           padding: "4px 8px",
@@ -443,7 +485,7 @@ const Orders = () => {
                         {order.shipping?.status || "pending"}
                       </span>
                     </td>
-                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    <td style={{ padding: "12px", border: "none" }}>
                       <span
                         style={{
                           padding: "4px 8px",
@@ -463,10 +505,10 @@ const Orders = () => {
                         {order.sellerStatus || "pending"}
                       </span>
                     </td>
-                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    <td style={{ padding: "12px", border: "none" }}>
                       ${parseFloat(order.totalAmount || 0).toFixed(2)}
                     </td>
-                    <td style={{ padding: "12px", border: "1px solid #ddd" }}>
+                    <td style={{ padding: "12px", border: "none" }}>
                       <div
                         style={{
                           display: "flex",
@@ -511,7 +553,8 @@ const Orders = () => {
                           </>
                         )}
                         {order.sellerStatus === "accepted" &&
-                          order.shipping?.status === "pending" && (
+                          order.shipping?.status === "pending" &&
+                          (order.paymentStatus === "paid" ? (
                             <button
                               onClick={() => shipOrder(order._id || order.id)}
                               disabled={loading}
@@ -528,8 +571,24 @@ const Orders = () => {
                             >
                               Ship
                             </button>
-                          )}
-                        {order.sellerStatus === "completed" && (
+                          ) : (
+                            <button
+                              disabled
+                              style={{
+                                padding: "4px 8px",
+                                backgroundColor: "#6c757d",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                fontSize: "12px",
+                                opacity: 0.6,
+                              }}
+                            >
+                              Awaiting Payment
+                            </button>
+                          ))}
+                        {(order.sellerStatus === "completed" ||
+                          order.sellerStatus === "rejected") && (
                           <button
                             onClick={() => deleteOrder(order._id || order.id)}
                             disabled={loading}
@@ -666,7 +725,9 @@ const Orders = () => {
                           </div>
                           <div>
                             <strong>Payment Status:</strong>{" "}
-                            {order.payment?.status || "Unknown"}
+                            {order.paymentStatus ||
+                              order.payment?.status ||
+                              "Unknown"}
                           </div>
                         </div>
                       </td>
