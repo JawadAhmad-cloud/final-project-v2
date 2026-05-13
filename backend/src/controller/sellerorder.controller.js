@@ -424,11 +424,14 @@ async function deleteOrder(req, res) {
       });
     }
 
-    if (order.sellerStatus !== "completed") {
+    if (
+      order.sellerStatus !== "completed" &&
+      order.sellerStatus !== "rejected"
+    ) {
       return res.status(400).json({
         success: false,
         data: null,
-        message: "Only completed orders can be deleted",
+        message: "Only completed or rejected orders can be deleted",
       });
     }
 

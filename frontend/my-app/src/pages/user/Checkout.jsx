@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { NotificationContext } from "../../context/NotificationContext";
+import { getUserFriendlyError } from "../../utils/errorFormatter";
 
 const Checkout = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const { showError, showSuccess } = useContext(NotificationContext);
   const [order, setOrder] = useState(null);
   const [checkoutSession, setCheckoutSession] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [step, setStep] = useState(1); // 1: Review, 2: Payment
   const [paymentData, setPaymentData] = useState({
     cardNumber: "4111111111111111",
@@ -38,7 +40,6 @@ const Checkout = () => {
 
   const fetchOrder = async () => {
     setLoading(true);
-    setError(null);
 
     try {
       const storedUser = sessionStorage.getItem("user");
@@ -46,7 +47,8 @@ const Checkout = () => {
       const token = user?.token;
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        showError("No authentication token found. Please log in again.");
+        return;
       }
 
       // Fetch order details to show in review
@@ -61,7 +63,8 @@ const Checkout = () => {
       );
 
       if (!orderRes.ok) {
-        throw new Error("Failed to load order");
+        const errorData = await orderRes.json();
+        throw new Error(errorData.message || "Failed to load order");
       }
 
       const orderData = await orderRes.json();
@@ -71,7 +74,7 @@ const Checkout = () => {
         throw new Error(orderData.message || "Failed to load order");
       }
     } catch (err) {
-      setError(err.message || "Unable to load order");
+      showError(getUserFriendlyError(err, "load order details"));
     } finally {
       setLoading(false);
     }
@@ -86,7 +89,8 @@ const Checkout = () => {
       const token = user?.token;
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        showError("No authentication token found. Please log in again.");
+        return;
       }
 
       // Create checkout session
@@ -103,23 +107,27 @@ const Checkout = () => {
       );
 
       if (!checkoutRes.ok) {
-        throw new Error("Failed to create checkout session");
+        const errorData = await checkoutRes.json();
+        throw new Error(
+          errorData.message || "Failed to create checkout session",
+        );
       }
 
       const checkoutData = await checkoutRes.json();
       if (checkoutData.success) {
         setCheckoutSession(checkoutData.data);
       } else {
-        setError(checkoutData.message || "Failed to create checkout session");
+        throw new Error(
+          checkoutData.message || "Failed to create checkout session",
+        );
       }
     } catch (err) {
-      setError(err.message || "Failed to create checkout session");
+      showError(getUserFriendlyError(err, "create checkout session"));
     }
   };
 
   const createOrderFromCart = async () => {
     setLoading(true);
-    setError(null);
 
     try {
       const storedUser = sessionStorage.getItem("user");
@@ -127,7 +135,8 @@ const Checkout = () => {
       const token = user?.token;
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        showError("No authentication token found. Please log in again.");
+        return;
       }
 
       const tempOrder = JSON.parse(sessionStorage.getItem("tempOrder"));
@@ -151,7 +160,8 @@ const Checkout = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create order");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create order");
       }
 
       const data = await response.json();
@@ -160,7 +170,7 @@ const Checkout = () => {
         navigate(`/user/checkout/${data.data.orderId}`);
       }
     } catch (err) {
-      setError(err.message || "Unable to create order");
+      showError(getUserFriendlyError(err, "create order"));
     } finally {
       setLoading(false);
     }
@@ -168,12 +178,11 @@ const Checkout = () => {
 
   const handlePayment = async () => {
     if (!checkoutSession) {
-      setError("Checkout session not found");
+      showError("Checkout session not found");
       return;
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       const storedUser = sessionStorage.getItem("user");
@@ -181,7 +190,8 @@ const Checkout = () => {
       const token = user?.token;
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        showError("No authentication token found. Please log in again.");
+        return;
       }
 
       const response = await fetch(
@@ -206,13 +216,13 @@ const Checkout = () => {
         throw new Error(data.message || "Payment processing failed");
       }
       if (data.success) {
-        alert("Payment successful! Order has been confirmed.");
+        showSuccess("Payment successful! Order has been confirmed.");
         navigate("/user/orders");
       } else {
         throw new Error(data.message || "Payment failed");
       }
     } catch (err) {
-      setError(err.message || "Payment processing failed");
+      showError(getUserFriendlyError(err, "process payment"));
     } finally {
       setLoading(false);
     }
@@ -239,21 +249,6 @@ const Checkout = () => {
   return (
     <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px" }}>
       <h1>Checkout</h1>
-
-      {error && (
-        <div
-          style={{
-            marginBottom: "20px",
-            padding: "15px",
-            backgroundColor: "#f8d7da",
-            border: "1px solid #f5c6cb",
-            borderRadius: "4px",
-            color: "#721c24",
-          }}
-        >
-          {error}
-        </div>
-      )}
 
       {/* Order Status Check */}
       {order && order.sellerStatus === "pending" && (
@@ -690,4 +685,3 @@ const Checkout = () => {
 };
 
 export default Checkout;
-

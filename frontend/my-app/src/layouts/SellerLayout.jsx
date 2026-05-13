@@ -1,17 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import SellerNavbar from "../components/SellerNavbar";
 import UserNavbar from "../components/UserNavbar";
+import OrderNotificationAlert from "../components/OrderNotificationAlert";
+import { useSocket } from "../context/SocketContext";
+import { NotificationContext } from "../context/NotificationContext";
 
 const SellerLayout = () => {
   const [shopVerified, setShopVerified] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [newOrder, setNewOrder] = useState(null);
+  const { socket } = useSocket();
+  const { showSuccess } = useContext(NotificationContext);
 
   useEffect(() => {
     checkShopVerification();
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewOrder = (order) => {
+      console.log("SellerLayout: New order received:", order);
+      setNewOrder(order);
+      showSuccess(
+        `New Order! ${order.itemCount} items - ৳${order.totalAmount}`,
+        5000,
+      );
+      // Auto dismiss notification alert after 8 seconds
+      setTimeout(() => {
+        setNewOrder(null);
+      }, 8000);
+    };
+
+    socket.on("new-order", handleNewOrder);
+
+    return () => {
+      socket.off("new-order", handleNewOrder);
+    };
+  }, [socket, showSuccess]);
 
   const checkShopVerification = async () => {
     try {
@@ -117,6 +146,16 @@ const SellerLayout = () => {
 
   return (
     <>
+      {newOrder && (
+        <OrderNotificationAlert
+          order={newOrder}
+          onDismiss={() => setNewOrder(null)}
+          onViewOrder={() => {
+            navigate("/seller/orders");
+            setNewOrder(null);
+          }}
+        />
+      )}
       <UserNavbar />
       <div className="flex flex-row">
         <SellerNavbar />
@@ -129,4 +168,3 @@ const SellerLayout = () => {
 };
 
 export default SellerLayout;
-

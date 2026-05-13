@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
+import { NotificationContext } from "../../context/NotificationContext";
+import { useSocket } from "../../context/SocketContext";
+import { getUserFriendlyError } from "../../utils/errorFormatter";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -8,13 +11,13 @@ const Orders = () => {
   const [sellerStatus, setSellerStatus] = useState("");
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const { showError, showSuccess } = useContext(NotificationContext);
+  const { socket } = useSocket();
 
   // Fetch seller orders
   const fetchOrders = async (currentPage = 1) => {
     setLoading(true);
-    setError(null);
 
     try {
       const storedUser = sessionStorage.getItem("user");
@@ -22,7 +25,8 @@ const Orders = () => {
       const token = user?.token;
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        showError("No authentication token. Please log in again.");
+        return;
       }
 
       const params = new URLSearchParams({
@@ -43,7 +47,8 @@ const Orders = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to load orders");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to load orders");
       }
 
       const json = await response.json();
@@ -56,7 +61,7 @@ const Orders = () => {
       setTotalItems(json.data.total || 0);
       setPage(currentPage);
     } catch (err) {
-      setError(err.message || "Unable to load orders");
+      showError(getUserFriendlyError(err, "load orders"));
       setOrders([]);
     } finally {
       setLoading(false);
@@ -66,7 +71,6 @@ const Orders = () => {
   // Accept order
   const acceptOrder = async (orderId) => {
     setLoading(true);
-    setError(null);
 
     try {
       const storedUser = sessionStorage.getItem("user");
@@ -74,7 +78,8 @@ const Orders = () => {
       const token = user?.token;
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        showError("No authentication token. Please log in again.");
+        return;
       }
 
       const response = await fetch(
@@ -87,20 +92,21 @@ const Orders = () => {
         },
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to accept order");
-      }
-
       const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json.message || "Failed to accept order");
+      }
 
       if (!json.success) {
         throw new Error(json.message || "Accept operation failed");
       }
 
+      showSuccess("Order accepted successfully!");
       setSelectedOrderId(null);
       fetchOrders(page);
     } catch (err) {
-      setError(err.message || "Unable to accept order");
+      showError(getUserFriendlyError(err, "accept order"));
     } finally {
       setLoading(false);
     }
@@ -109,7 +115,6 @@ const Orders = () => {
   // Reject order
   const rejectOrder = async (orderId) => {
     setLoading(true);
-    setError(null);
 
     try {
       const storedUser = sessionStorage.getItem("user");
@@ -117,7 +122,8 @@ const Orders = () => {
       const token = user?.token;
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        showError("No authentication token. Please log in again.");
+        return;
       }
 
       const response = await fetch(
@@ -130,20 +136,21 @@ const Orders = () => {
         },
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to reject order");
-      }
-
       const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json.message || "Failed to reject order");
+      }
 
       if (!json.success) {
         throw new Error(json.message || "Reject operation failed");
       }
 
+      showSuccess("Order rejected successfully!");
       setSelectedOrderId(null);
       fetchOrders(page);
     } catch (err) {
-      setError(err.message || "Unable to reject order");
+      showError(getUserFriendlyError(err, "reject order"));
     } finally {
       setLoading(false);
     }
@@ -156,7 +163,6 @@ const Orders = () => {
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       const storedUser = sessionStorage.getItem("user");
@@ -164,7 +170,8 @@ const Orders = () => {
       const token = user?.token;
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        showError("No authentication token. Please log in again.");
+        return;
       }
 
       const response = await fetch(
@@ -177,20 +184,21 @@ const Orders = () => {
         },
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to delete order");
-      }
-
       const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json.message || "Failed to delete order");
+      }
 
       if (!json.success) {
         throw new Error(json.message || "Delete operation failed");
       }
 
+      showSuccess("Order deleted successfully!");
       setSelectedOrderId(null);
       fetchOrders(page);
     } catch (err) {
-      setError(err.message || "Unable to delete order");
+      showError(getUserFriendlyError(err, "delete order"));
     } finally {
       setLoading(false);
     }
@@ -203,7 +211,6 @@ const Orders = () => {
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       const storedUser = sessionStorage.getItem("user");
@@ -211,7 +218,8 @@ const Orders = () => {
       const token = user?.token;
 
       if (!token) {
-        throw new Error("No authentication token found. Please log in again.");
+        showError("No authentication token. Please log in again.");
+        return;
       }
 
       const response = await fetch(
@@ -235,10 +243,11 @@ const Orders = () => {
         throw new Error(json.message || "Ship operation failed");
       }
 
+      showSuccess("Order shipped successfully!");
       setSelectedOrderId(null);
       fetchOrders(page);
     } catch (err) {
-      setError(err.message || "Unable to ship order");
+      showError(getUserFriendlyError(err, "ship order"));
     } finally {
       setLoading(false);
     }
@@ -247,6 +256,34 @@ const Orders = () => {
   useEffect(() => {
     fetchOrders(1);
   }, [orderStatus, sellerStatus, limit]);
+
+  // Listen to socket events for real-time order updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewOrder = (order) => {
+      console.log(
+        "Orders page: New order received, refetching orders...",
+        order,
+      );
+      // Refetch orders to show the new order
+      fetchOrders(1);
+    };
+
+    const handleOrderUpdate = (data) => {
+      console.log("Orders page: Order updated, refetching orders...", data);
+      // Refetch orders to reflect the update
+      fetchOrders(page);
+    };
+
+    socket.on("new-order", handleNewOrder);
+    socket.on("order-update", handleOrderUpdate);
+
+    return () => {
+      socket.off("new-order", handleNewOrder);
+      socket.off("order-update", handleOrderUpdate);
+    };
+  }, [socket, page]);
 
   const totalPages = Math.ceil(totalItems / limit);
 
@@ -271,20 +308,6 @@ const Orders = () => {
       >
         Orders Management
       </h1>
-
-      {error && (
-        <p
-          style={{
-            color: "#e74c3c",
-            backgroundColor: "#faddd7",
-            padding: "10px",
-            borderRadius: "4px",
-            marginBottom: "20px",
-          }}
-        >
-          {error}
-        </p>
-      )}
 
       <div
         style={{
@@ -775,4 +798,3 @@ const Orders = () => {
 };
 
 export default Orders;
-

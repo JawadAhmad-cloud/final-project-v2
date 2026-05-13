@@ -21,31 +21,25 @@ export const SocketProvider = ({ children }) => {
 
     // Handle connection
     newSocket.on("connect", () => {
-      console.log("Connected to Socket.IO server");
+      console.log("✅ Connected to Socket.IO server");
       setIsConnected(true);
-
-      // Authenticate as seller if logged in
-      const storedAdmin = sessionStorage.getItem("admin");
-      const admin = storedAdmin ? JSON.parse(storedAdmin) : null;
-      if (admin?.token && admin?.role === "seller") {
-        newSocket.emit("seller-auth", admin.token);
-        console.log("Authenticating seller with Socket.IO");
-      }
     });
 
     // Handle disconnection
     newSocket.on("disconnect", () => {
-      console.log("Disconnected from Socket.IO server");
+      console.log("⚠️ Disconnected from Socket.IO server");
       setIsConnected(false);
     });
 
     // Listen for authentication success/error
     newSocket.on("auth-success", (data) => {
-      console.log("Seller authenticated:", data.message);
+      console.log("✅ Seller authenticated:", data.message);
+      // Fetch initial pending order count after auth
+      fetchInitialOrderCount();
     });
 
     newSocket.on("auth-error", (data) => {
-      console.error("Authentication failed:", data.message);
+      console.error("❌ Authentication failed:", data.message);
     });
 
     // Cleanup on unmount
@@ -54,60 +48,64 @@ export const SocketProvider = ({ children }) => {
     };
   }, []);
 
+  // Authenticate seller whenever user changes or socket connects
+  useEffect(() => {
+    if (!socket) return;
+
+    const storedUser = sessionStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (socket.connected && user?.token && user?.role === "seller") {
+      console.log("📡 Emitting seller-auth...");
+      socket.emit("seller-auth", user.token);
+    }
+  }, [socket, isConnected]);
+
   // Separate effect to handle "new-order" listener to avoid closure issues
   useEffect(() => {
     if (!socket) return;
 
     const handleNewOrder = (data) => {
-      console.log("New order received:", data);
-      console.log("Updating badge count...");
+      console.log("📦 New order received:", data);
       setNewOrderCount((prevCount) => {
         const newCount = prevCount + 1;
-        console.log(`Badge count updated: ${prevCount} -> ${newCount}`);
+        console.log(`✅ Badge count updated: ${prevCount} -> ${newCount}`);
         return newCount;
       });
       toast.success(
-        `New order received! Order ID: ${data.orderId}, Total: ₨${data.totalAmount}`,
+        `New order received! Order ID: ${data.orderId}, Total: ৳${data.totalAmount}`,
       );
     };
 
     const handleOrderUpdate = (data) => {
-      console.log("Order updated:", data);
+      console.log("📝 Order updated:", data);
       toast.info(
         `Order ${data.orderId} has been ${data.action}. Status: ${data.status}`,
       );
     };
 
-    const handleAuthSuccess = (data) => {
-      console.log("Seller authenticated:", data.message);
-      // Fetch initial pending order count after auth
-      fetchInitialOrderCount();
-    };
-
     socket.on("new-order", handleNewOrder);
     socket.on("order-update", handleOrderUpdate);
-    socket.on("auth-success", handleAuthSuccess);
 
     // Cleanup old listeners when socket changes
     return () => {
       socket.off("new-order", handleNewOrder);
       socket.off("order-update", handleOrderUpdate);
-      socket.off("auth-success", handleAuthSuccess);
     };
   }, [socket]);
 
   // Function to fetch initial pending order count
   const fetchInitialOrderCount = async () => {
-    const storedAdmin = sessionStorage.getItem("admin");
-    const admin = storedAdmin ? JSON.parse(storedAdmin) : null;
-    const token = admin?.token;
+    const storedUser = sessionStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const token = user?.token;
 
     if (!token) return;
 
     try {
       console.log("Fetching initial order count...");
       const response = await fetch(
-        "http://localhost:5000/api/seller/orders?limit=1",
+        "http://localhost:5000/api/seller/orders?page=1&limit=1&status=pending",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -118,12 +116,10 @@ export const SocketProvider = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.data.summary) {
-          console.log(
-            "Initial order count fetched:",
-            data.data.summary.pendingOrders,
-          );
-          setNewOrderCount(data.data.summary.pendingOrders);
+        if (data.success && data.data) {
+          const pendingCount = data.data.summary?.pendingOrders || 0;
+          console.log("Initial order count fetched:", pendingCount);
+          setNewOrderCount(pendingCount);
         }
       }
     } catch (error) {
@@ -133,11 +129,11 @@ export const SocketProvider = ({ children }) => {
 
   // Function to authenticate as a seller (useful for manual re-auth)
   const authenticateSeller = () => {
-    const storedAdmin = sessionStorage.getItem("admin");
-    const admin = storedAdmin ? JSON.parse(storedAdmin) : null;
-    const token = admin?.token;
+    const storedUser = sessionStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const token = user?.token;
 
-    if (socket && isConnected && token && admin?.role === "seller") {
+    if (socket && isConnected && token && user?.role === "seller") {
       socket.emit("seller-auth", token);
       // Fetch initial order count after authentication
       fetchInitialOrderCount();
