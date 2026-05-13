@@ -19,9 +19,9 @@ export default function AdminManagement() {
   const [sellers, setSellers] = useState([]);
   const [userLoading, setUserLoading] = useState(false);
   const [sellerLoading, setSellerLoading] = useState(false);
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const token = user?.token || null;
+  const storedAdmin = sessionStorage.getItem("admin");
+  const admin = storedAdmin ? JSON.parse(storedAdmin) : null;
+  const token = admin?.token || null;
 
   useEffect(() => {
     fetchAdmins();
@@ -39,7 +39,6 @@ export default function AdminManagement() {
         `http://localhost:5000/api/admin/management/all-admins?page=${page}&limit=10`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
         },
       );
 
@@ -61,7 +60,6 @@ export default function AdminManagement() {
         `http://localhost:5000/api/admin/management/all-users?page=1&limit=100`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
         },
       );
       const data = await response.json();
@@ -80,7 +78,6 @@ export default function AdminManagement() {
         `http://localhost:5000/api/admin/management/all-sellers?page=1&limit=100`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
         },
       );
       const data = await response.json();
@@ -106,7 +103,6 @@ export default function AdminManagement() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
           body: JSON.stringify(formData),
         },
       );
@@ -144,7 +140,6 @@ export default function AdminManagement() {
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
         },
       );
 
@@ -167,7 +162,6 @@ export default function AdminManagement() {
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
         },
       );
 
@@ -198,7 +192,6 @@ export default function AdminManagement() {
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
         },
       );
 

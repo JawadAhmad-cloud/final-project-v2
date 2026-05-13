@@ -16,7 +16,7 @@ const SellerLayout = () => {
   const checkShopVerification = async () => {
     try {
       setLoading(true);
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -31,7 +31,6 @@ const SellerLayout = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
       });
 
       if (!response.ok) {
@@ -102,7 +101,7 @@ const SellerLayout = () => {
               </p>
               <button
                 onClick={() => {
-                  localStorage.removeItem("user");
+                  sessionStorage.removeItem("user");
                   navigate("/");
                 }}
                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
@@ -130,3 +129,4 @@ const SellerLayout = () => {
 };
 
 export default SellerLayout;
+

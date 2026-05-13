@@ -60,7 +60,7 @@ export default function CreateShop() {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -74,16 +74,22 @@ export default function CreateShop() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
         body: JSON.stringify(formData),
       });
 
+      const json = await response.json();
+
       if (!response.ok) {
-        const json = await response.json();
+        // If there are validation errors, display them
+        if (json.errors && Array.isArray(json.errors)) {
+          const errorMessages = json.errors
+            .map((err) => `${err.path}: ${err.msg}`)
+            .join("\n");
+          throw new Error(errorMessages);
+        }
         throw new Error(json.message || "Failed to create shop");
       }
 
-      const json = await response.json();
       if (json.success) {
         setSuccess(true);
         setTimeout(() => {
@@ -384,3 +390,4 @@ export default function CreateShop() {
     </div>
   );
 }
+

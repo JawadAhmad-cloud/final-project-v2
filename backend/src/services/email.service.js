@@ -41,11 +41,11 @@ async function sendVerificationEmail(email, otp, username) {
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to: email,
-    subject: "Email Verification - ShopFlow",
+    subject: "Email Verification - Khyber Store",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
         <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h1 style="color: #7c3aed; text-align: center; margin-bottom: 20px;">ShopFlow</h1>
+          <h1 style="color: #7c3aed; text-align: center; margin-bottom: 20px;">Khyber Store</h1>
           
           <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Email Verification</h2>
           
@@ -54,7 +54,7 @@ async function sendVerificationEmail(email, otp, username) {
           </p>
           
           <p style="color: #666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-            Welcome to ShopFlow! To complete your registration, please verify your email address using the OTP below:
+            Welcome to Khyber Store! To complete your registration, please verify your email address using the OTP below:
           </p>
           
           <div style="background-color: #7c3aed; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
@@ -68,7 +68,7 @@ async function sendVerificationEmail(email, otp, username) {
           
           <p style="color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 30px;">
             Best regards,<br>
-            <strong>ShopFlow Team</strong>
+            <strong>Khyber Store Team</strong>
           </p>
           
           <div style="border-top: 1px solid #e0e0e0; padding-top: 20px; text-align: center;">
@@ -97,11 +97,11 @@ async function sendPasswordResetEmail(email, resetToken, username) {
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to: email,
-    subject: "Password Reset - ShopFlow",
+    subject: "Password Reset - Khyber Store",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
         <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h1 style="color: #7c3aed; text-align: center; margin-bottom: 20px;">ShopFlow</h1>
+          <h1 style="color: #7c3aed; text-align: center; margin-bottom: 20px;">Khyber Store</h1>
           
           <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Password Reset Request</h2>
           
@@ -123,7 +123,7 @@ async function sendPasswordResetEmail(email, resetToken, username) {
           
           <p style="color: #666; font-size: 14px; line-height: 1.5; margin-bottom: 30px;">
             Best regards,<br>
-            <strong>ShopFlow Team</strong>
+<strong>Khyber Store Team</strong>
           </p>
         </div>
       </div>

@@ -14,7 +14,6 @@ export const AdminProvider = ({ children }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(formData),
     });
 
@@ -26,7 +25,7 @@ export const AdminProvider = ({ children }) => {
 
     const adminUser = data.data;
     setAdmin(adminUser);
-    localStorage.setItem("admin", JSON.stringify(adminUser));
+    sessionStorage.setItem("admin", JSON.stringify(adminUser));
 
     return adminUser;
   };
@@ -36,19 +35,18 @@ export const AdminProvider = ({ children }) => {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
-        credentials: "include",
       });
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
       setAdmin(null);
-      localStorage.removeItem("admin");
+      sessionStorage.removeItem("admin");
     }
   };
 
   // Check if admin is logged in on mount
   useEffect(() => {
-    const storedAdmin = localStorage.getItem("admin");
+    const storedAdmin = sessionStorage.getItem("admin");
     if (storedAdmin && storedAdmin !== "undefined") {
       setAdmin(JSON.parse(storedAdmin));
     }
@@ -63,3 +61,4 @@ export const AdminProvider = ({ children }) => {
     </AdminContext.Provider>
   );
 };
+

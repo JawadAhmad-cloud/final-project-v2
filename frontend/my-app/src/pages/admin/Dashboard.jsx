@@ -22,9 +22,9 @@ export default function AdminDashboard() {
     recentActivity: [],
   });
   const [loading, setLoading] = useState(true);
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const token = user?.token || null;
+  const storedAdmin = sessionStorage.getItem("admin");
+  const admin = storedAdmin ? JSON.parse(storedAdmin) : null;
+  const token = admin?.token || null;
 
   useEffect(() => {
     fetchDashboardStats();
@@ -40,7 +40,6 @@ export default function AdminDashboard() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
       const shopsData = await shopsRes.json();
@@ -52,7 +51,6 @@ export default function AdminDashboard() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
       const allShopsData = await allShopsRes.json();
@@ -64,7 +62,6 @@ export default function AdminDashboard() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
       const adminsData = await adminsRes.json();

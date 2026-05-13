@@ -27,7 +27,7 @@ const Inventory = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -42,7 +42,6 @@ const Inventory = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
         },
       );
 
@@ -75,7 +74,7 @@ const Inventory = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -90,7 +89,6 @@ const Inventory = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
         },
       );
 
@@ -125,7 +123,7 @@ const Inventory = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -141,7 +139,6 @@ const Inventory = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
           body: JSON.stringify({ totalStock: parseInt(newStock) }),
         },
       );
@@ -563,3 +560,4 @@ const Inventory = () => {
 };
 
 export default Inventory;
+

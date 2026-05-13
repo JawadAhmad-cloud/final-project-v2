@@ -12,9 +12,14 @@ const SellerNavbar = () => {
     checkIfShopExists();
   }, []);
 
+  // Debug effect to log when newOrderCount changes
+  useEffect(() => {
+    console.log("SellerNavbar: newOrderCount updated to:", newOrderCount);
+  }, [newOrderCount]);
+
   const checkIfShopExists = async () => {
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -28,7 +33,6 @@ const SellerNavbar = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
       });
 
       if (response.ok) {

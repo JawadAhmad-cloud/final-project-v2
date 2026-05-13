@@ -107,7 +107,7 @@ const userSchema = new mongoose.Schema(
     // Account Preferences
     currency: {
       type: String,
-      default: "USD",
+      default: "PKR",
     },
     language: {
       type: String,

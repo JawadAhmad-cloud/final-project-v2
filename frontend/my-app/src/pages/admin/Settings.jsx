@@ -33,9 +33,9 @@ export default function Settings() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const storedUser = localStorage.getItem("user");
-      const user = storedUser ? JSON.parse(storedUser) : null;
-      const token = user?.token;
+      const storedAdmin = sessionStorage.getItem("admin");
+      const admin = storedAdmin ? JSON.parse(storedAdmin) : null;
+      const token = admin?.token;
 
       if (!token) {
         throw new Error("No authentication token found");
@@ -46,7 +46,6 @@ export default function Settings() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
       });
 
       if (!response.ok) {
@@ -90,7 +89,7 @@ export default function Settings() {
       setSaving(true);
       setError(null);
 
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -104,7 +103,6 @@ export default function Settings() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
         body: JSON.stringify({ settings }),
       });
 

@@ -89,7 +89,6 @@ function ProductDetailspage() {
     if (!user) return;
     try {
       const res = await fetch("http://localhost:5000/api/favourite", {
-        credentials: "include",
         headers: { Authorization: `Bearer ${user.token}` },
       });
       const data = await res.json();
@@ -119,7 +118,6 @@ function ProductDetailspage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`,
         },
-        credentials: "include",
         body: !isFavorite ? JSON.stringify({ productId: id }) : undefined,
       });
 
@@ -139,7 +137,6 @@ function ProductDetailspage() {
     if (!user) return;
     try {
       const res = await fetch("http://localhost:5000/api/order", {
-        credentials: "include",
         headers: { Authorization: `Bearer ${user.token}` },
       });
       const data = await res.json();
@@ -211,7 +208,6 @@ function ProductDetailspage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`,
         },
-        credentials: "include",
         body: JSON.stringify({
           productId: id,
           orderId: purchasedOrder._id,
@@ -295,7 +291,7 @@ function ProductDetailspage() {
             ⭐ {product.rating} ({product.reviewCount} reviews)
           </p>
 
-          <h2 className="text-2xl font-bold text-gray-800">${product.price}</h2>
+          <h2 className="text-2xl font-bold text-gray-800">₨{product.price}</h2>
           <p
             className={`font-medium ${
               product.availableStock > 0 ? "text-green-600" : "text-red-500"
@@ -458,3 +454,4 @@ function ProductDetailspage() {
 }
 
 export default ProductDetailspage;
+

@@ -15,6 +15,13 @@ const AdminRoutes = ({ onLogout }) => {
     return <Navigate to="/admin/login" replace />;
   }
 
+  // Only admins can access admin routes (not sellers)
+  if (admin.role !== "admin") {
+    return (
+      <Navigate to={admin.role === "seller" ? "/seller/orders" : "/"} replace />
+    );
+  }
+
   return (
     <AdminLayout onLogout={onLogout}>
       <Routes>

@@ -18,9 +18,9 @@ export default function Analytics() {
   });
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("month");
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const token = user?.token || null;
+  const storedAdmin = sessionStorage.getItem("admin");
+  const admin = storedAdmin ? JSON.parse(storedAdmin) : null;
+  const token = admin?.token || null;
 
   useEffect(() => {
     fetchAnalytics();
@@ -37,7 +37,6 @@ export default function Analytics() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
       const analyticsData = await analyticsRes.json();
@@ -49,7 +48,6 @@ export default function Analytics() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
       const trendsData = await trendsRes.json();
@@ -61,7 +59,6 @@ export default function Analytics() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
       const shopStats = await shopStatsRes.json();
@@ -164,7 +161,7 @@ export default function Analytics() {
         <StatCard
           icon={FaChartLine}
           title="Avg Order Value"
-          value={`$${analyticsData.averageOrderValue.toFixed(2)}`}
+          value={`₨${analyticsData.averageOrderValue.toFixed(2)}`}
           subtitle="Per order"
           color="bg-purple-500"
         />

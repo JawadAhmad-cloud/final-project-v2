@@ -24,7 +24,7 @@ const Analytics = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -39,7 +39,6 @@ const Analytics = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
         },
       );
 
@@ -73,7 +72,7 @@ const Analytics = () => {
     return Number.isFinite(numberValue) ? numberValue : 0;
   };
 
-  const formatCurrency = (value) => `$${safeNumber(value).toFixed(2)}`;
+  const formatCurrency = (value) => `₨${safeNumber(value).toFixed(2)}`;
 
   const StatCard = ({ title, value, icon, color, unit = "" }) => (
     <div
@@ -647,3 +646,4 @@ const Analytics = () => {
 };
 
 export default Analytics;
+

@@ -48,34 +48,26 @@ app.use("/api/auth", authRoute);
 // User routes
 app.use("/api/user", authMiddleware, userRoute);
 
-// Seller routes
+// Seller routes - ALL seller routes go through auth + role middleware once
 app.use("/api/seller", authMiddleware, roleMiddleware("seller"), sellerRoute);
-
-// Product routes (seller dashboard)
 app.use(
   "/api/seller/products",
   authMiddleware,
   roleMiddleware("seller"),
   productRoute,
 );
-
-// Inventory routes (seller dashboard)
 app.use(
   "/api/seller/inventory",
   authMiddleware,
   roleMiddleware("seller"),
   inventoryRoute,
 );
-
-// Seller order routes (seller dashboard)
 app.use(
   "/api/seller/orders",
   authMiddleware,
   roleMiddleware("seller"),
   sellerOrderRoute,
 );
-
-// Analytics routes (seller dashboard)
 app.use(
   "/api/seller/analytics",
   authMiddleware,

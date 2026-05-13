@@ -43,7 +43,7 @@ const Products = () => {
         ...(status && { status }),
       });
 
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -58,7 +58,6 @@ const Products = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
         },
       );
 
@@ -107,7 +106,7 @@ const Products = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -126,7 +125,6 @@ const Products = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        credentials: "include",
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
@@ -214,7 +212,7 @@ const Products = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -233,7 +231,6 @@ const Products = () => {
             Authorization: `Bearer ${token}`,
           },
           body: formData,
-          credentials: "include",
         },
       );
 
@@ -274,7 +271,7 @@ const Products = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -289,7 +286,6 @@ const Products = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
 
@@ -323,7 +319,7 @@ const Products = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -339,7 +335,6 @@ const Products = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
           body: JSON.stringify({ status: newStatus }),
         },
       );
@@ -814,7 +809,7 @@ const Products = () => {
                     {product.name || "N/A"}
                   </td>
                   <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                    ${parseFloat(product.price || 0).toFixed(2)}
+                    ₨{parseFloat(product.price || 0).toFixed(2)}
                   </td>
                   <td style={{ padding: "12px", border: "1px solid #ddd" }}>
                     {product.totalStock || product.stock || 0}
@@ -942,3 +937,4 @@ const Products = () => {
 };
 
 export default Products;
+

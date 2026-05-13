@@ -22,7 +22,7 @@ const Profile = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -35,7 +35,6 @@ const Profile = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
       });
 
       if (!response.ok) {
@@ -61,7 +60,7 @@ const Profile = () => {
   // Fetch shop details
   const fetchShopDetails = async () => {
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -74,7 +73,6 @@ const Profile = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
       });
 
       if (response.ok) {
@@ -106,7 +104,7 @@ const Profile = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -125,7 +123,6 @@ const Profile = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        credentials: "include",
         body: JSON.stringify(addressFormData),
       });
 
@@ -170,7 +167,7 @@ const Profile = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -185,7 +182,6 @@ const Profile = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
 
@@ -371,7 +367,7 @@ const Profile = () => {
                   <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
                     Total Transaction:
                   </p>
-                  <p>${parseFloat(shop.totaltransaction || 0).toFixed(2)}</p>
+                  <p>₨{parseFloat(shop.totaltransaction || 0).toFixed(2)}</p>
                 </div>
                 <div>
                   <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
@@ -670,3 +666,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

@@ -21,7 +21,6 @@ const UserProfile = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
         });
 
         const data = await res.json();
@@ -161,3 +160,4 @@ const UserProfile = () => {
 };
 
 export default UserProfile;
+

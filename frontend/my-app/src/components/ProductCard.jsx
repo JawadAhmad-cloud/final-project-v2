@@ -48,10 +48,10 @@ const ProductCard = ({ product }) => {
 
         <div className="product-card-price-row">
           <div>
-            <p className="product-card-price">${discountedPrice}</p>
+            <p className="product-card-price">₨{discountedPrice}</p>
             {discount > 0 && (
               <p className="product-card-original-price mt-1">
-                ${price.toFixed(2)}
+                ₨{price.toFixed(2)}
               </p>
             )}
           </div>

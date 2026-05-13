@@ -17,9 +17,9 @@ export default function ShopManagement() {
   const [selectedShopDetail, setSelectedShopDetail] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingShop, setDeletingShop] = useState(null);
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const token = user?.token || null;
+  const storedAdmin = sessionStorage.getItem("admin");
+  const admin = storedAdmin ? JSON.parse(storedAdmin) : null;
+  const token = admin?.token || null;
 
   useEffect(() => {
     fetchShops();
@@ -39,7 +39,6 @@ export default function ShopManagement() {
         `http://localhost:5000/api/admin/shops?${query}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
         },
       );
 
@@ -62,7 +61,6 @@ export default function ShopManagement() {
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
         },
       );
 
@@ -89,7 +87,6 @@ export default function ShopManagement() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
           body: JSON.stringify({ rejectionreason: rejectionReason }),
         },
       );
@@ -117,7 +114,6 @@ export default function ShopManagement() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
           body: JSON.stringify({ shopIds: selectedShops }),
         },
       );
@@ -151,7 +147,6 @@ export default function ShopManagement() {
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
         },
       );
 
@@ -291,12 +286,17 @@ export default function ShopManagement() {
                 </thead>
                 <tbody>
                   {filteredShops.map((shop) => (
-                    <tr key={shop._id || shop.shopId} className="border-b hover:bg-gray-50">
+                    <tr
+                      key={shop._id || shop.shopId}
+                      className="border-b hover:bg-gray-50"
+                    >
                       {statusFilter === "pending" && (
                         <td className="px-6 py-4">
                           <input
                             type="checkbox"
-                            checked={selectedShops.includes(shop._id || shop.shopId)}
+                            checked={selectedShops.includes(
+                              shop._id || shop.shopId,
+                            )}
                             onChange={(e) =>
                               e.target.checked
                                 ? setSelectedShops([
@@ -339,7 +339,9 @@ export default function ShopManagement() {
                           {statusFilter === "pending" && (
                             <>
                               <button
-                                onClick={() => handleVerifyShop(shop._id || shop.shopId)}
+                                onClick={() =>
+                                  handleVerifyShop(shop._id || shop.shopId)
+                                }
                                 className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                               >
                                 <FaCheck />

@@ -20,8 +20,13 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     try {
-      await adminLogin(formData);
-      navigate("/admin/dashboard");
+      const adminData = await adminLogin(formData);
+      // Navigate based on role
+      if (adminData.role === "seller") {
+        navigate("/seller/orders");
+      } else {
+        navigate("/admin/dashboard");
+      }
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {
@@ -54,7 +59,7 @@ export default function AdminLogin() {
               <label className="block text-white text-sm font-medium mb-2">
                 Email Address
               </label>
-              <div className="flex items-center bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-3">
+              <div className="flex items-center bg-white bg-opacity-20 border border-indigo-500 border-opacity-50 rounded-lg px-4 py-3 focus-within:bg-opacity-30 focus-within:border-indigo-400 transition">
                 <FaEnvelope className="text-indigo-400 mr-3" />
                 <input
                   type="email"
@@ -62,7 +67,7 @@ export default function AdminLogin() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="admin@example.com"
-                  className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
+                  className="flex-1 bg-transparent text-white placeholder-gray-300 outline-none"
                   required
                 />
               </div>
@@ -73,7 +78,7 @@ export default function AdminLogin() {
               <label className="block text-white text-sm font-medium mb-2">
                 Password
               </label>
-              <div className="flex items-center bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-3">
+              <div className="flex items-center bg-white bg-opacity-20 border border-indigo-500 border-opacity-50 rounded-lg px-4 py-3 focus-within:bg-opacity-30 focus-within:border-indigo-400 transition">
                 <FaLock className="text-indigo-400 mr-3" />
                 <input
                   type="password"
@@ -81,7 +86,7 @@ export default function AdminLogin() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
+                  className="flex-1 bg-transparent text-white placeholder-gray-300 outline-none"
                   required
                 />
               </div>

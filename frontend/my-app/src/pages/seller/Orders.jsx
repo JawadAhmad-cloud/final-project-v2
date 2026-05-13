@@ -17,7 +17,7 @@ const Orders = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -39,7 +39,6 @@ const Orders = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
         },
       );
 
@@ -70,7 +69,7 @@ const Orders = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -85,7 +84,6 @@ const Orders = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
 
@@ -114,7 +112,7 @@ const Orders = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -129,7 +127,6 @@ const Orders = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
 
@@ -162,7 +159,7 @@ const Orders = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -177,7 +174,6 @@ const Orders = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
         },
       );
 
@@ -210,7 +206,7 @@ const Orders = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -226,7 +222,6 @@ const Orders = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
         },
       );
 
@@ -506,7 +501,7 @@ const Orders = () => {
                       </span>
                     </td>
                     <td style={{ padding: "12px", border: "none" }}>
-                      ${parseFloat(order.totalAmount || 0).toFixed(2)}
+                      ₨{parseFloat(order.totalAmount || 0).toFixed(2)}
                     </td>
                     <td style={{ padding: "12px", border: "none" }}>
                       <div
@@ -780,3 +775,4 @@ const Orders = () => {
 };
 
 export default Orders;
+

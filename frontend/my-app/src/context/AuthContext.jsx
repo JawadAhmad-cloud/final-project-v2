@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(formData),
     });
 
@@ -36,7 +35,6 @@ export const AuthProvider = ({ children }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(formData),
     });
 
@@ -49,7 +47,7 @@ export const AuthProvider = ({ children }) => {
     const user = data.data;
 
     setUser(user);
-    localStorage.setItem("user", JSON.stringify(user));
+    sessionStorage.setItem("user", JSON.stringify(user));
 
     // Authenticate seller with socket if role is seller
     if (user.role === "seller") {
@@ -61,7 +59,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = sessionStorage.getItem("user");
 
     if (storedUser && storedUser !== "undefined") {
       const user = JSON.parse(storedUser);
@@ -82,7 +80,6 @@ export const AuthProvider = ({ children }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
       body: JSON.stringify({ role }),
     });
 
@@ -94,7 +91,7 @@ export const AuthProvider = ({ children }) => {
 
     const user = data.data;
     setUser(user);
-    localStorage.setItem("user", JSON.stringify(user));
+    sessionStorage.setItem("user", JSON.stringify(user));
     return user;
   };
 
@@ -102,13 +99,12 @@ export const AuthProvider = ({ children }) => {
     try {
       await fetch("http://localhost:5000/api/auth/logout", {
         method: "POST",
-        credentials: "include",
       });
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
       setUser(null);
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
     }
   };
 
@@ -118,7 +114,6 @@ export const AuthProvider = ({ children }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(formData),
     });
 
@@ -130,7 +125,7 @@ export const AuthProvider = ({ children }) => {
 
     const user = data.data;
     setUser(user);
-    localStorage.setItem("user", JSON.stringify(user));
+    sessionStorage.setItem("user", JSON.stringify(user));
     return data;
   };
 
@@ -140,7 +135,6 @@ export const AuthProvider = ({ children }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
     });
 
     const data = await res.json();
@@ -234,3 +228,4 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+

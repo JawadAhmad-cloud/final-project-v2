@@ -13,7 +13,6 @@ const Favorites = () => {
 
       const res = await fetch("http://localhost:5000/api/favourite", {
         method: "GET",
-        credentials: "include",
       });
 
       const data = await res.json();
@@ -35,7 +34,6 @@ const Favorites = () => {
         `http://localhost:5000/api/favourite/${productId}`,
         {
           method: "DELETE",
-          credentials: "include",
         },
       );
 
@@ -57,7 +55,6 @@ const Favorites = () => {
     try {
       const res = await fetch("http://localhost:5000/api/favourite/clear", {
         method: "DELETE",
-        credentials: "include",
       });
 
       const data = await res.json();
@@ -137,7 +134,7 @@ const Favorites = () => {
               {/* Info */}
               <h2 className="text-lg font-semibold mt-3">{product.name}</h2>
 
-              <p className="text-gray-600">${product.price}</p>
+              <p className="text-gray-600">₨{product.price}</p>
 
               {/* Buttons */}
               <div className="flex gap-2 mt-4">
@@ -171,3 +168,4 @@ const Favorites = () => {
 };
 
 export default Favorites;
+

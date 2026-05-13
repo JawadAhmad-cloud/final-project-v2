@@ -17,7 +17,7 @@ const Orders = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -37,7 +37,6 @@ const Orders = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
         },
       );
 
@@ -213,7 +212,7 @@ const Orders = () => {
                     </span>
                   </td>
                   <td style={{ padding: "12px", border: "1px solid #ddd" }}>
-                    ${parseFloat(order.totalAmount || 0).toFixed(2)}
+                    ₨{parseFloat(order.totalAmount || 0).toFixed(2)}
                   </td>
                   <td style={{ padding: "12px", border: "1px solid #ddd" }}>
                     {new Date(order.createdAt).toLocaleDateString()}
@@ -285,7 +284,10 @@ const Orders = () => {
                   </td>
                 </tr>,
                 expandedOrder === order._id && order.items ? (
-                  <tr key={`expanded-${order._id || order.id}`} style={{ backgroundColor: "#f9f9f9" }}>
+                  <tr
+                    key={`expanded-${order._id || order.id}`}
+                    style={{ backgroundColor: "#f9f9f9" }}
+                  >
                     <td colSpan={7} style={{ padding: "12px" }}>
                       <div style={{ marginLeft: "20px" }}>
                         <h4 style={{ marginBottom: "10px" }}>
@@ -310,9 +312,7 @@ const Orders = () => {
                             >
                               {item.product?.name || "Product"}
                             </button>
-                            <span
-                              style={{ marginLeft: "10px", color: "#666" }}
-                            >
+                            <span style={{ marginLeft: "10px", color: "#666" }}>
                               Qty: {item.quantity} | $
                               {(
                                 (item.product?.price || 0) * item.quantity
@@ -370,3 +370,4 @@ const Orders = () => {
 };
 
 export default Orders;
+

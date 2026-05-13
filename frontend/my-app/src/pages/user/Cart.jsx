@@ -44,10 +44,21 @@ const Cart = () => {
       quantity: item.quantity,
     }));
 
+    const storedUser = sessionStorage.getItem("user");
+    const userData = storedUser ? JSON.parse(storedUser) : null;
+    const token = userData?.token;
+
+    if (!token) {
+      alert("Please log in first");
+      return;
+    }
+
     const res = await fetch("http://localhost:5000/api/order", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         items,
         shippingAddress,
@@ -83,10 +94,21 @@ const Cart = () => {
       quantity: item.quantity,
     }));
 
+    const storedUser = sessionStorage.getItem("user");
+    const userData = storedUser ? JSON.parse(storedUser) : null;
+    const token = userData?.token;
+
+    if (!token) {
+      alert("Please log in first");
+      return;
+    }
+
     const res = await fetch("http://localhost:5000/api/order", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         items,
         shippingAddress: shippingForm,

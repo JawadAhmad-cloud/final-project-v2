@@ -41,7 +41,7 @@ const Checkout = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -57,7 +57,6 @@ const Checkout = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
         },
       );
 
@@ -82,7 +81,7 @@ const Checkout = () => {
     if (!order) return;
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -99,7 +98,6 @@ const Checkout = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
           body: JSON.stringify({ paymentMethod: "card" }),
         },
       );
@@ -124,7 +122,7 @@ const Checkout = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -141,7 +139,6 @@ const Checkout = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        credentials: "include",
         body: JSON.stringify({
           items: tempOrder.items,
           shippingAddress: {
@@ -179,7 +176,7 @@ const Checkout = () => {
     setError(null);
 
     try {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = sessionStorage.getItem("user");
       const user = storedUser ? JSON.parse(storedUser) : null;
       const token = user?.token;
 
@@ -195,7 +192,6 @@ const Checkout = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include",
           body: JSON.stringify({
             checkoutId: checkoutSession.checkoutId || checkoutSession._id,
             cardNumber: paymentData.cardNumber,
@@ -635,7 +631,7 @@ const Checkout = () => {
                 }}
               >
                 <span>Subtotal:</span>
-                <span>${(order?.totalPrice || 0).toFixed(2)}</span>
+                <span>₨{(order?.totalPrice || 0).toFixed(2)}</span>
               </div>
               <div
                 style={{
@@ -669,7 +665,7 @@ const Checkout = () => {
               }}
             >
               <span>Total:</span>
-              <span>${(order?.totalAmount || 0).toFixed(2)}</span>
+              <span>₨{(order?.totalAmount || 0).toFixed(2)}</span>
             </div>
 
             <div
@@ -694,3 +690,4 @@ const Checkout = () => {
 };
 
 export default Checkout;
+

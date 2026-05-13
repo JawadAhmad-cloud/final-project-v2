@@ -1,7 +1,6 @@
 const API_URL = "http://localhost:5000/api/auth";
 export const apiFetch = async (endpoint, options = {}) => {
   const res = await fetch(`${API_URL}${endpoint}`, {
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
