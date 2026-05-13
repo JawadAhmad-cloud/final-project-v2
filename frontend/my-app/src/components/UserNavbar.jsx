@@ -1,5 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
-import { FaShoppingCart, FaHeart, FaUser, FaSignOutAlt, FaBars, FaTimes } from "react-icons/fa";
+import {
+  FaShoppingCart,
+  FaHeart,
+  FaUser,
+  FaSignOutAlt,
+  FaBars,
+  FaTimes,
+} from "react-icons/fa";
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 
@@ -31,11 +38,14 @@ const UserNavbar = () => {
           onClick={() => navigate("/")}
           className="text-lg md:text-xl font-bold cursor-pointer whitespace-nowrap"
         >
-          Shopio.
+          Khyber Store
         </h1>
 
         {/* Search Bar - Hidden on small screens */}
-        <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 mx-6 gap-2">
+        <form
+          onSubmit={handleSearch}
+          className="hidden md:flex items-center flex-1 mx-6 gap-2"
+        >
           <input
             type="text"
             placeholder="Search for products..."
@@ -85,10 +95,13 @@ const UserNavbar = () => {
               {/* Profile */}
               <Link
                 to="/user/profile"
-                className="flex items-center gap-2 cursor-pointer hover:text-purple-600 transition text-sm"
+                className="flex items-center gap-2 cursor-pointer transition text-sm"
               >
-                <FaUser />
-                <span>My Account</span>
+                <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold hover:bg-purple-700">
+                  {user?.firstname
+                    ? user.firstname.charAt(0).toUpperCase()
+                    : user?.username?.charAt(0).toUpperCase()}
+                </div>
               </Link>
 
               {user?.role === "seller" && (
@@ -201,7 +214,11 @@ const UserNavbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 p-2 hover:bg-purple-50 rounded transition text-sm"
                 >
-                  <FaUser />
+                  <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold">
+                    {user?.firstname
+                      ? user.firstname.charAt(0).toUpperCase()
+                      : user?.username?.charAt(0).toUpperCase()}
+                  </div>
                   <span>My Account</span>
                 </Link>
 

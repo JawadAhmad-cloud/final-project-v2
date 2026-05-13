@@ -49,17 +49,56 @@ async function getPlatformAnalytics(req, res) {
         startDate.setMonth(now.getMonth() - 1);
     }
 
-    // Get all orders and calculate revenue
-    const orders = await orderModel
-      .find({ createdAt: { $gte: startDate } })
-      .populate("seller", "shopId");
+    // Get platform revenue from payments
+    const paymentStats = await paymentModel.aggregate([
+      {
+        $match: {
+          status: "paid",
+          createdAt: { $gte: startDate },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          platformRevenue: { $sum: "$platformFee" },
+          totalRevenue: { $sum: "$amount" },
+          sellerRevenue: { $sum: "$sellerAmount" },
+          totalPayments: { $sum: 1 },
+        },
+      },
+    ]);
 
-    const totalRevenue = orders.reduce(
-      (sum, order) => sum + (order.totalprice || 0),
-      0,
-    );
-    const totalOrders = orders.length;
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const platformRevenue =
+      paymentStats.length > 0 ? paymentStats[0].platformRevenue : 0;
+    const totalRevenue =
+      paymentStats.length > 0 ? paymentStats[0].totalRevenue : 0;
+    const sellerRevenue =
+      paymentStats.length > 0 ? paymentStats[0].sellerRevenue : 0;
+    const totalPayments =
+      paymentStats.length > 0 ? paymentStats[0].totalPayments : 0;
+
+    // Get order statistics
+    const orderStatsResult = await orderModel.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalOrderValue: { $sum: "$totalAmount" },
+        },
+      },
+    ]);
+
+    const totalOrders =
+      orderStatsResult.length > 0 ? orderStatsResult[0].totalOrders : 0;
+    const totalOrderValue =
+      orderStatsResult.length > 0 ? orderStatsResult[0].totalOrderValue : 0;
+    const averageOrderValue =
+      totalOrders > 0 ? totalOrderValue / totalOrders : 0;
 
     // Get shop statistics
     const totalShops = await shopModel.countDocuments();
@@ -81,8 +120,13 @@ async function getPlatformAnalytics(req, res) {
     // Get order status distribution
     const orderStatuses = await orderModel.aggregate([
       {
+        $match: {
+          createdAt: { $gte: startDate },
+        },
+      },
+      {
         $group: {
-          _id: "$orderstatus",
+          _id: "$status",
           count: { $sum: 1 },
         },
       },
@@ -97,13 +141,18 @@ async function getPlatformAnalytics(req, res) {
       success: true,
       data: {
         revenue: {
-          total: totalRevenue,
-          average: parseFloat(averageOrderValue.toFixed(2)),
+          platform: parseFloat(platformRevenue.toFixed(2)),
+          total: parseFloat(totalRevenue.toFixed(2)),
+          seller: parseFloat(sellerRevenue.toFixed(2)),
+          averageOrderValue: parseFloat(averageOrderValue.toFixed(2)),
           period: period,
         },
         orders: {
           total: totalOrders,
           statusDistribution: orderStats,
+        },
+        payments: {
+          total: totalPayments,
         },
         shops: {
           total: totalShops,
@@ -161,16 +210,42 @@ async function getRevenueTrends(req, res) {
     if (period === "month") groupBy = "%Y-%m";
     if (period === "year") groupBy = "%Y";
 
-    // Get revenue trends
-    const trends = await orderModel.aggregate([
+    // Get revenue trends from payments (platform fees)
+    const trends = await paymentModel.aggregate([
+      {
+        $match: {
+          status: "paid",
+          createdAt: {
+            $gte: (() => {
+              const now = new Date();
+              switch (period) {
+                case "day":
+                  now.setDate(now.getDate() - 1);
+                  break;
+                case "week":
+                  now.setDate(now.getDate() - 7);
+                  break;
+                case "month":
+                  now.setMonth(now.getMonth() - 1);
+                  break;
+                case "year":
+                  now.setFullYear(now.getFullYear() - 1);
+                  break;
+              }
+              return now;
+            })(),
+          },
+        },
+      },
       {
         $group: {
           _id: {
             $dateToString: { format: groupBy, date: "$createdAt" },
           },
-          revenue: { $sum: "$totalprice" },
-          orders: { $sum: 1 },
-          averageOrderValue: { $avg: "$totalprice" },
+          platformRevenue: { $sum: "$platformFee" },
+          totalRevenue: { $sum: "$amount" },
+          sellerRevenue: { $sum: "$sellerAmount" },
+          payments: { $sum: 1 },
         },
       },
       {
@@ -182,9 +257,10 @@ async function getRevenueTrends(req, res) {
       success: true,
       data: trends.map((trend) => ({
         date: trend._id,
-        revenue: parseFloat(trend.revenue.toFixed(2)),
-        orders: trend.orders,
-        averageOrderValue: parseFloat(trend.averageOrderValue.toFixed(2)),
+        platformRevenue: parseFloat(trend.platformRevenue.toFixed(2)),
+        totalRevenue: parseFloat(trend.totalRevenue.toFixed(2)),
+        sellerRevenue: parseFloat(trend.sellerRevenue.toFixed(2)),
+        payments: trend.payments,
       })),
       message: "Revenue trends retrieved successfully",
     });
@@ -226,7 +302,7 @@ async function getShopStats(req, res) {
         $group: {
           _id: "$seller",
           totalOrders: { $sum: 1 },
-          totalRevenue: { $sum: "$totalprice" },
+          totalRevenue: { $sum: "$totalAmount" },
         },
       },
       {
@@ -239,7 +315,7 @@ async function getShopStats(req, res) {
         $lookup: {
           from: "shops",
           localField: "_id",
-          foreignField: "seller",
+          foreignField: "_id",
           as: "shopDetails",
         },
       },

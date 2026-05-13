@@ -13,6 +13,13 @@ const UserProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const getAuthHeaders = () => {
+    const storedUser = sessionStorage.getItem("user");
+    const token =
+      user?.token || (storedUser ? JSON.parse(storedUser)?.token : null);
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -20,6 +27,7 @@ const UserProfile = () => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            ...getAuthHeaders(),
           },
         });
 
@@ -160,4 +168,3 @@ const UserProfile = () => {
 };
 
 export default UserProfile;
-

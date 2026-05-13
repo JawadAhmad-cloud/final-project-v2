@@ -73,12 +73,22 @@ const CompleteProfile = () => {
     e.preventDefault();
 
     try {
+      const storedUser = sessionStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const token = user?.token;
+
+      if (!token) {
+        setErrors(["No authentication token found. Please log in again."]);
+        return;
+      }
+
       const res = await fetch(
         "http://localhost:5000/api/user/profile/complete",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(formData),
         },
@@ -277,4 +287,3 @@ const CompleteProfile = () => {
 };
 
 export default CompleteProfile;
-

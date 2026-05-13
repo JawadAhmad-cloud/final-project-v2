@@ -8,16 +8,46 @@ const sellerConnections = {};
  * @param {Object} io - Socket.io instance
  */
 function initializeSocket(io) {
+  // Add authentication middleware for socket handshake
+  io.use((socket, next) => {
+    try {
+      const token = socket.handshake.auth.token;
+
+      if (!token) {
+        // Token not required for initial connection, but seller-auth event requires it
+        return next();
+      }
+
+      const secretKey = process.env.SECRET_KEY || process.env.JWT_SECRET;
+      if (!secretKey) {
+        throw new Error("SECRET_KEY environment variable is not set");
+      }
+
+      const decoded = jwt.verify(token, secretKey);
+      socket.userId = decoded.id;
+      socket.userRole = decoded.role;
+
+      console.log(`Socket authenticated: User ${decoded.id} (${decoded.role})`);
+      next();
+    } catch (error) {
+      console.error("Socket handshake authentication error:", error.message);
+      next(new Error(`Authentication error: ${error.message}`));
+    }
+  });
+
   io.on("connection", (socket) => {
     console.log("User connected with socket ID:", socket.id);
 
     // Handle seller authentication and room joining
     socket.on("seller-auth", (token) => {
       try {
-        const decoded = jwt.verify(
-          token,
-          process.env.JWT_SECRET || "your_secret_key",
-        );
+        // Use the same SECRET_KEY as the backend auth middleware
+        const secretKey = process.env.SECRET_KEY || process.env.JWT_SECRET;
+        if (!secretKey) {
+          throw new Error("SECRET_KEY environment variable is not set");
+        }
+
+        const decoded = jwt.verify(token, secretKey);
 
         if (decoded.role === "seller") {
           const sellerId = decoded.id;
@@ -34,10 +64,17 @@ function initializeSocket(io) {
 
           console.log(`Seller ${sellerId} connected with socket ${socket.id}`);
           socket.emit("auth-success", { message: "Authenticated" });
+        } else {
+          console.error("Socket authentication error: User is not a seller");
+          socket.emit("auth-error", {
+            message: "Authentication failed: User is not a seller",
+          });
         }
       } catch (error) {
         console.error("Socket authentication error:", error.message);
-        socket.emit("auth-error", { message: "Authentication failed" });
+        socket.emit("auth-error", {
+          message: `Authentication failed: ${error.message}`,
+        });
       }
     });
 

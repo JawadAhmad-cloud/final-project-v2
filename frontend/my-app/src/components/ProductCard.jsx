@@ -39,37 +39,29 @@ const ProductCard = ({ product }) => {
       </Link>
 
       <div className="product-card-body">
-        <div>
-          <h3 className="product-card-title line-clamp-2">{product.name}</h3>
-          {product.category && (
-            <p className="product-card-meta text-sm mt-1">{product.category}</p>
-          )}
-        </div>
-
-        <div className="product-card-price-row">
-          <div>
-            <p className="product-card-price">₨{discountedPrice}</p>
-            {discount > 0 && (
-              <p className="product-card-original-price mt-1">
-                ₨{price.toFixed(2)}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={handleAddToCart}
-            className="btn-primary product-card-button flex items-center justify-center gap-2"
-          >
-            <FaShoppingCart className="text-white" />
-            {added ? "Added" : "Add to Cart"}
-          </button>
-        </div>
+        <h3 className="product-card-title line-clamp-2">{product.name}</h3>
 
         <div className="product-card-footer">
           <span className="product-card-rating">
             {"★".repeat(Math.round(product.rating || 0))}{" "}
-            {product.rating ? `(${product.rating})` : "No rating"}
+            {product.rating ? `(${product.rating.toFixed(1)})` : "No rating"}
           </span>
         </div>
+
+        <div className="product-card-price-section">
+          <p className="product-card-price">₨{discountedPrice}</p>
+          {discount > 0 && (
+            <p className="product-card-original-price">₨{price.toFixed(2)}</p>
+          )}
+        </div>
+
+        <button
+          onClick={handleAddToCart}
+          className="btn-primary product-card-button flex items-center justify-center gap-2"
+        >
+          <FaShoppingCart className="text-white" />
+          <span>{added ? "Added" : "Add to Cart"}</span>
+        </button>
       </div>
     </div>
   );

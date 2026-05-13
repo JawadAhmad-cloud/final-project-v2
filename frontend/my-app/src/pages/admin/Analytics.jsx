@@ -67,13 +67,13 @@ export default function Analytics() {
         const revenueByMonth =
           trendsData.data?.map((trend) => ({
             month: trend.date,
-            revenue: trend.revenue,
+            revenue: trend.platformRevenue,
           })) || [];
 
         setAnalyticsData({
-          totalRevenue: analyticsData.data.revenue?.total || 0,
+          totalRevenue: analyticsData.data.revenue?.platform || 0,
           totalOrders: analyticsData.data.orders?.total || 0,
-          averageOrderValue: analyticsData.data.revenue?.average || 0,
+          averageOrderValue: analyticsData.data.revenue?.averageOrderValue || 0,
           topProducts: shopStats.data?.topShops || [],
           revenueByMonth:
             revenueByMonth.length > 0

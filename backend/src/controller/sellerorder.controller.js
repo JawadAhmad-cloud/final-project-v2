@@ -174,10 +174,7 @@ async function acceptOrder(req, res) {
     order.status = "accepted";
     await order.save();
 
-    // Emit socket notification about order acceptance
-    if (io) {
-      socketService.notifySellerOrderUpdate(io, shop._id, order, "accepted");
-    }
+    // TODO: Emit socket notification to buyer about order acceptance (if buyer sockets implemented)
 
     res.status(200).json({
       success: true,
@@ -264,10 +261,7 @@ async function rejectOrder(req, res) {
     // TODO: Reverse reserved stock
     await order.save();
 
-    // Emit socket notification about order rejection
-    if (io) {
-      socketService.notifySellerOrderUpdate(io, shop._id, order, "rejected");
-    }
+    // TODO: Emit socket notification to buyer about order rejection (if buyer sockets implemented)
 
     res.status(200).json({
       success: true,

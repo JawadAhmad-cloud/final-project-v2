@@ -41,7 +41,8 @@ routes.post("/", async (req, res) => {
 
     // Calculate total price
     let totalPrice = 0;
-    let sellerId = null;
+    let shopId = null;
+    let sellerUserId = null;
 
     for (const item of items) {
       const Product = require("../model/product.model");
@@ -55,15 +56,24 @@ routes.post("/", async (req, res) => {
       totalPrice += product.price * item.quantity;
 
       // Get seller from first product
-      if (!sellerId) {
-        sellerId = product.seller;
+      if (!shopId) {
+        shopId = product.seller;
+      }
+    }
+
+    // Get the seller user ID from the shop
+    if (shopId) {
+      const Shop = require("../model/shop.model");
+      const shop = await Shop.findById(shopId);
+      if (shop) {
+        sellerUserId = shop.seller;
       }
     }
 
     // Create order
     const order = new Order({
       user: userId,
-      seller: sellerId,
+      seller: shopId,
       items,
       shippingAddress,
       totalPrice,
@@ -75,8 +85,8 @@ routes.post("/", async (req, res) => {
     await order.save();
 
     // Emit socket notification to seller if connected
-    if (io && sellerId) {
-      socketService.notifySellerNewOrder(io, sellerId, order);
+    if (io && sellerUserId) {
+      socketService.notifySellerNewOrder(io, sellerUserId, order);
     }
 
     res.status(201).json({
@@ -157,6 +167,7 @@ routes.post("/:orderId/checkout", async (req, res) => {
 routes.post("/payment/process", async (req, res) => {
   try {
     const { checkoutId, cardNumber, expiryDate, cvv } = req.body;
+    const io = req.app.get("io");
 
     if (!checkoutId || !cardNumber || !expiryDate || !cvv) {
       return res.status(400).json({
@@ -165,11 +176,15 @@ routes.post("/payment/process", async (req, res) => {
       });
     }
 
-    const result = await paymentService.processPayment(checkoutId, {
-      cardNumber,
-      expiryDate,
-      cvv,
-    });
+    const result = await paymentService.processPayment(
+      checkoutId,
+      {
+        cardNumber,
+        expiryDate,
+        cvv,
+      },
+      io,
+    );
 
     console.log(result);
 

@@ -11,6 +11,14 @@ const Checkout = () => {
   const [checkoutSession, setCheckoutSession] = useState(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Review, 2: Payment
+  const [showAddressForm, setShowAddressForm] = useState(false); // To show address form for temp orders
+  const [address, setAddress] = useState({
+    street: "",
+    city: "",
+    postalcode: "",
+    country: "",
+  });
+  const [addressErrors, setAddressErrors] = useState({});
   const [paymentData, setPaymentData] = useState({
     cardNumber: "4111111111111111",
     expiryDate: "12/25",
@@ -26,7 +34,8 @@ const Checkout = () => {
       // Check if there's a temp order in session storage
       const tempOrder = sessionStorage.getItem("tempOrder");
       if (tempOrder) {
-        createOrderFromCart();
+        // Show address form instead of immediately creating the order
+        setShowAddressForm(true);
       }
     }
   }, [orderId]);
@@ -126,7 +135,7 @@ const Checkout = () => {
     }
   };
 
-  const createOrderFromCart = async () => {
+  const createOrderFromCart = async (shippingAddress) => {
     setLoading(true);
 
     try {
@@ -150,12 +159,7 @@ const Checkout = () => {
         },
         body: JSON.stringify({
           items: tempOrder.items,
-          shippingAddress: {
-            street: "Temp Street",
-            city: "Temp City",
-            postalcode: "12345",
-            country: "Temp Country",
-          },
+          shippingAddress: shippingAddress,
         }),
       });
 
@@ -228,8 +232,241 @@ const Checkout = () => {
     }
   };
 
+  const validateAddress = () => {
+    const errors = {};
+
+    if (!address.street || address.street.trim() === "") {
+      errors.street = "Street address is required";
+    }
+
+    if (!address.city || address.city.trim() === "") {
+      errors.city = "City is required";
+    }
+
+    if (!address.postalcode || address.postalcode.trim() === "") {
+      errors.postalcode = "Postal code is required";
+    }
+
+    if (!address.country || address.country.trim() === "") {
+      errors.country = "Country is required";
+    }
+
+    setAddressErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleAddressSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateAddress()) {
+      return;
+    }
+
+    // Create order with the provided address
+    await createOrderFromCart(address);
+    setShowAddressForm(false);
+  };
+
   if (loading && !order) {
     return <div className="p-10 text-center">Loading checkout...</div>;
+  }
+
+  if (showAddressForm) {
+    return (
+      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "24px" }}>
+        <h1>Shipping Address</h1>
+        <p style={{ color: "#666", marginBottom: "20px" }}>
+          Please provide your shipping address to proceed with your order.
+        </p>
+
+        <form onSubmit={handleAddressSubmit}>
+          <div style={{ marginBottom: "15px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                fontWeight: "bold",
+              }}
+            >
+              Street Address *
+            </label>
+            <input
+              type="text"
+              value={address.street}
+              onChange={(e) => {
+                setAddress({ ...address, street: e.target.value });
+                if (addressErrors.street) {
+                  setAddressErrors({ ...addressErrors, street: "" });
+                }
+              }}
+              placeholder="123 Main Street"
+              style={{
+                width: "100%",
+                padding: "10px",
+                boxSizing: "border-box",
+                borderRadius: "4px",
+                border: addressErrors.street
+                  ? "2px solid red"
+                  : "1px solid #ddd",
+              }}
+            />
+            {addressErrors.street && (
+              <span style={{ color: "red", fontSize: "12px" }}>
+                {addressErrors.street}
+              </span>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "15px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                fontWeight: "bold",
+              }}
+            >
+              City *
+            </label>
+            <input
+              type="text"
+              value={address.city}
+              onChange={(e) => {
+                setAddress({ ...address, city: e.target.value });
+                if (addressErrors.city) {
+                  setAddressErrors({ ...addressErrors, city: "" });
+                }
+              }}
+              placeholder="New York"
+              style={{
+                width: "100%",
+                padding: "10px",
+                boxSizing: "border-box",
+                borderRadius: "4px",
+                border: addressErrors.city ? "2px solid red" : "1px solid #ddd",
+              }}
+            />
+            {addressErrors.city && (
+              <span style={{ color: "red", fontSize: "12px" }}>
+                {addressErrors.city}
+              </span>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "15px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                fontWeight: "bold",
+              }}
+            >
+              Postal Code *
+            </label>
+            <input
+              type="text"
+              value={address.postalcode}
+              onChange={(e) => {
+                setAddress({ ...address, postalcode: e.target.value });
+                if (addressErrors.postalcode) {
+                  setAddressErrors({ ...addressErrors, postalcode: "" });
+                }
+              }}
+              placeholder="10001"
+              style={{
+                width: "100%",
+                padding: "10px",
+                boxSizing: "border-box",
+                borderRadius: "4px",
+                border: addressErrors.postalcode
+                  ? "2px solid red"
+                  : "1px solid #ddd",
+              }}
+            />
+            {addressErrors.postalcode && (
+              <span style={{ color: "red", fontSize: "12px" }}>
+                {addressErrors.postalcode}
+              </span>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "20px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                fontWeight: "bold",
+              }}
+            >
+              Country *
+            </label>
+            <input
+              type="text"
+              value={address.country}
+              onChange={(e) => {
+                setAddress({ ...address, country: e.target.value });
+                if (addressErrors.country) {
+                  setAddressErrors({ ...addressErrors, country: "" });
+                }
+              }}
+              placeholder="United States"
+              style={{
+                width: "100%",
+                padding: "10px",
+                boxSizing: "border-box",
+                borderRadius: "4px",
+                border: addressErrors.country
+                  ? "2px solid red"
+                  : "1px solid #ddd",
+              }}
+            />
+            {addressErrors.country && (
+              <span style={{ color: "red", fontSize: "12px" }}>
+                {addressErrors.country}
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: "12px",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: loading ? "default" : "pointer",
+                opacity: loading ? 0.5 : 1,
+                fontSize: "16px",
+              }}
+            >
+              {loading ? "Creating Order..." : "Continue to Checkout"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowAddressForm(false);
+                navigate("/user/products");
+              }}
+              style={{
+                flex: 1,
+                padding: "12px",
+                backgroundColor: "#6c757d",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "16px",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    );
   }
 
   if (!order && !checkoutSession) {

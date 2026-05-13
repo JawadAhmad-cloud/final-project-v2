@@ -11,10 +11,41 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [newOrderCount, setNewOrderCount] = useState(0);
 
+  const authenticateSeller = (socketInstance = socket) => {
+    const storedUser = sessionStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const token = user?.token;
+
+    if (!socketInstance) return;
+
+    if (socketInstance.connected && token && user?.role === "seller") {
+      console.log("📡 Emitting seller-auth...");
+      socketInstance.emit("seller-auth", token);
+    } else {
+      console.warn("Seller auth skipped:", {
+        connected: socketInstance.connected,
+        hasToken: !!token,
+        role: user?.role,
+      });
+    }
+  };
+
   useEffect(() => {
+    const storedUser = sessionStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const token = user?.token;
+
+    if (!token || user?.role !== "seller") {
+      console.warn(
+        "Socket connection skipped: user is not authenticated as seller",
+      );
+      return;
+    }
+
     // Connect to the backend Socket.IO server
     const newSocket = io("http://localhost:5000", {
       transports: ["websocket", "polling"],
+      auth: { token },
     });
 
     setSocket(newSocket);
@@ -23,6 +54,7 @@ export const SocketProvider = ({ children }) => {
     newSocket.on("connect", () => {
       console.log("✅ Connected to Socket.IO server");
       setIsConnected(true);
+      authenticateSeller(newSocket);
     });
 
     // Handle disconnection
@@ -39,7 +71,7 @@ export const SocketProvider = ({ children }) => {
     });
 
     newSocket.on("auth-error", (data) => {
-      console.error("❌ Authentication failed:", data.message);
+      console.error("❌ Authentication failed:", data.message, data);
     });
 
     // Cleanup on unmount
@@ -47,19 +79,6 @@ export const SocketProvider = ({ children }) => {
       newSocket.disconnect();
     };
   }, []);
-
-  // Authenticate seller whenever user changes or socket connects
-  useEffect(() => {
-    if (!socket) return;
-
-    const storedUser = sessionStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-
-    if (socket.connected && user?.token && user?.role === "seller") {
-      console.log("📡 Emitting seller-auth...");
-      socket.emit("seller-auth", user.token);
-    }
-  }, [socket, isConnected]);
 
   // Separate effect to handle "new-order" listener to avoid closure issues
   useEffect(() => {
@@ -124,19 +143,6 @@ export const SocketProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Failed to fetch initial order count:", error);
-    }
-  };
-
-  // Function to authenticate as a seller (useful for manual re-auth)
-  const authenticateSeller = () => {
-    const storedUser = sessionStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-    const token = user?.token;
-
-    if (socket && isConnected && token && user?.role === "seller") {
-      socket.emit("seller-auth", token);
-      // Fetch initial order count after authentication
-      fetchInitialOrderCount();
     }
   };
 

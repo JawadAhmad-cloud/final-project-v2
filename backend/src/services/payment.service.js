@@ -64,7 +64,7 @@ async function createCheckout(orderId, paymentData) {
 }
 
 // Process payment (dummy - auto approves)
-async function processPayment(checkoutId, verificationData) {
+async function processPayment(checkoutId, verificationData, io = null) {
   try {
     const payment = await Payment.findById(checkoutId);
     if (!payment) {
@@ -116,6 +116,24 @@ async function processPayment(checkoutId, verificationData) {
       "payment.status": "paid",
       "payment.transactionId": payment.transactionId,
     });
+
+    // Get updated order for notification
+    const updatedOrder = await Order.findById(payment.orderId);
+
+    // Emit socket notification to seller about payment completion
+    if (io && updatedOrder) {
+      const Shop = require("../model/shop.model");
+      const shop = await Shop.findById(updatedOrder.seller);
+      if (shop && shop.seller) {
+        const socketService = require("./socket.service");
+        socketService.notifySellerOrderUpdate(
+          io,
+          shop.seller,
+          updatedOrder,
+          "paid",
+        );
+      }
+    }
 
     // Process payment to seller - Add revenue to seller account
     const revenueResult = await addSellerRevenue(

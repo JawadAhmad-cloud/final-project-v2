@@ -14,6 +14,25 @@ function VerifyEmail() {
   const [success, setSuccess] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
 
+  const parseApiError = (error, fallbackMessage) => {
+    const status = error?.response?.status;
+    const responseData = error?.response?.data || error;
+
+    if (status === 401) {
+      return ["Unauthorized. Please sign in again."];
+    }
+
+    if (responseData?.errors) {
+      return responseData.errors.map((e) => e.msg || e);
+    }
+
+    if (responseData?.message) {
+      return [responseData.message];
+    }
+
+    return [fallbackMessage];
+  };
+
   const handleOtpChange = (e) => {
     const value = e.target.value;
     // Only allow digits and limit to 6 characters
@@ -45,13 +64,11 @@ function VerifyEmail() {
       }
     } catch (error) {
       console.error("Error:", error);
+      const parsedErrors = parseApiError(error, "Verification failed");
+      setError(parsedErrors);
 
-      if (error?.errors) {
-        setError(error.errors.map((e) => e.msg || e));
-      } else if (error?.message) {
-        setError([error.message]);
-      } else {
-        setError(["Verification failed"]);
+      if (error?.response?.status === 401) {
+        navigate("/login");
       }
     } finally {
       setLoading(false);
@@ -83,13 +100,11 @@ function VerifyEmail() {
       }, 1000);
     } catch (error) {
       console.error("Error:", error);
+      const parsedErrors = parseApiError(error, "Failed to resend OTP");
+      setError(parsedErrors);
 
-      if (error?.errors) {
-        setError(error.errors.map((e) => e.msg || e));
-      } else if (error?.message) {
-        setError([error.message]);
-      } else {
-        setError(["Failed to resend OTP"]);
+      if (error?.response?.status === 401) {
+        navigate("/login");
       }
     } finally {
       setResendLoading(false);

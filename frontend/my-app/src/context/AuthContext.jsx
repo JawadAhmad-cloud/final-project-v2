@@ -74,11 +74,20 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, [authenticateSeller]);
 
+  const getAuthHeaders = () => {
+    const storedUser = sessionStorage.getItem("user");
+    console.log(JSON.parse(storedUser));
+    const token =
+      user?.token || (storedUser ? JSON.parse(storedUser)?.token : null);
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const setRoleApi = async (role) => {
     const res = await fetch("http://localhost:5000/api/auth/set-role", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeaders(),
       },
       body: JSON.stringify({ role }),
     });
@@ -99,6 +108,9 @@ export const AuthProvider = ({ children }) => {
     try {
       await fetch("http://localhost:5000/api/auth/logout", {
         method: "POST",
+        headers: {
+          ...getAuthHeaders(),
+        },
       });
     } catch (error) {
       console.error("Logout error:", error);
@@ -113,6 +125,7 @@ export const AuthProvider = ({ children }) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeaders(),
       },
       body: JSON.stringify(formData),
     });
@@ -134,6 +147,7 @@ export const AuthProvider = ({ children }) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeaders(),
       },
     });
 
@@ -228,4 +242,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
